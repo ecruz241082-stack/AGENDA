@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#231f2b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icono-192.png">
+<link rel="apple-touch-icon" href="icono-192.png">
+<meta name="description" content="Reserva tu hora en línea.">
+<title>Agenda Pro Belleza</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px)}
+/* Layout: app de agenda — barra superior con el negocio, pestañas abajo como app móvil; en escritorio se centra en una columna ancha. La reserva del cliente es una pantalla aparte, paso a paso. */
+:root{
+  --bg:#f4f3f6; --panel:#ffffff; --fg:#1e1b24; --muted:#6a6475; --line:#e0dde6;
+  --ink:#231f2b; --ink-fg:#ffffff; --accent:#c2546e; --accent-fg:#ffffff; --soft:#f8e9ee;
+  --ok:#2e8a63; --okbg:#e2f3ea; --warn:#a8670f; --warnbg:#fbefdc; --bad:#b23a3a; --badbg:#fbe4e4; --info:#3b5bb5; --infobg:#e6ecfa;
+  --display:"Bricolage Grotesque","Arial Narrow",Arial,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141218; --panel:#1d1a22; --fg:#ece9f1; --muted:#a29bad; --line:#332e3b;
+  --ink:#0d0b10; --ink-fg:#f3f0f7; --accent:#e27591; --accent-fg:#1a0d12; --soft:#33202a;
+  --ok:#5fc795; --okbg:#173024; --warn:#e4a54c; --warnbg:#33270f; --bad:#ee7b7b; --badbg:#3a1a1a; --info:#8fa6ee; --infobg:#1d2440; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141218; --panel:#1d1a22; --fg:#ece9f1; --muted:#a29bad; --line:#332e3b;
+  --ink:#0d0b10; --ink-fg:#f3f0f7; --accent:#e27591; --accent-fg:#1a0d12; --soft:#33202a;
+  --ok:#5fc795; --okbg:#173024; --warn:#e4a54c; --warnbg:#33270f; --bad:#ee7b7b; --badbg:#3a1a1a; --info:#8fa6ee; --infobg:#1d2440; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+.top{background:var(--ink);color:var(--ink-fg);padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top-in{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{width:42px;height:42px;border-radius:12px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:1.1rem;overflow:hidden;flex:none}
+.logo img{width:100%;height:100%;object-fit:cover}
+.top h1{font-size:1.25rem;font-weight:800;line-height:1.1}
+.top small{display:block;opacity:.7;font-size:.8rem}
+.top .grow{flex:1;min-width:0}
+.modo{display:flex;background:rgba(255,255,255,.1);border-radius:999px;padding:3px}
+.modo button{border:0;background:transparent;color:inherit;padding:6px 12px;border-radius:999px;font-weight:600;font-size:.82rem;cursor:pointer;opacity:.75}
+.top small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:560px){.modo{width:100%}.modo button{flex:1}}
+.modo button[aria-pressed="true"]{background:var(--ink-fg);color:var(--ink);opacity:1}
+.demo{background:var(--soft);color:var(--fg);font-size:.82rem;text-align:center;padding:6px 16px}
+.wrap{max-width:980px;margin:0 auto;padding-block:16px 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:12px;min-width:0}
+.panel h2{font-size:1.1rem;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--panel);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs button{flex:1;max-width:140px;border:0;background:none;padding:9px 4px 8px;display:grid;justify-items:center;gap:2px;font-size:.72rem;font-weight:600;color:var(--muted);cursor:pointer}
+.tabs button svg{width:22px;height:22px}
+.tabs button[aria-selected="true"]{color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:var(--ink-fg)}
+.btn.sm{padding:6px 10px;font-size:.82rem;border-radius:8px}
+.btn.ghost{background:transparent}
+.btn.bad{color:var(--bad);border-color:var(--bad);background:transparent}
+.btn.wa{background:#1fa855;border-color:#1fa855;color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible,input:focus,select:focus,textarea:focus,.tabs button:focus-visible,.day:focus-visible,.slot:focus-visible,.svc:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:560px){.fields{grid-template-columns:minmax(0,1fr)}}
+.f{display:grid;gap:4px;min-width:0}.f.full{grid-column:1/-1}
+label{font-size:.75rem;font-weight:700;color:var(--muted);letter-spacing:.03em}
+input,select,textarea{width:100%;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 11px}
+textarea{min-height:64px;resize:vertical}
+.hint{font-size:.82rem;color:var(--muted);margin:0}
+.msg{margin:0;font-size:.88rem;padding:8px 10px;border-radius:8px}
+.msg.ok{background:var(--okbg);color:var(--ok)}.msg.bad{background:var(--badbg);color:var(--bad)}
+/* agenda */
+.strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.day{flex:0 0 56px;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:6px 0;display:grid;justify-items:center;cursor:pointer;gap:1px;position:relative}
+.day small{font-size:.68rem;color:var(--muted);text-transform:uppercase;font-weight:700}
+.day b{font-family:var(--display);font-size:1.2rem}
+.day i{position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.day[aria-pressed="true"]{background:var(--ink);color:var(--ink-fg);border-color:var(--ink)}
+.day[aria-pressed="true"] small{color:inherit;opacity:.75}
+.day.off{opacity:.5}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kpi{background:var(--bg);border-radius:12px;padding:10px}
+.kpi span{display:block;font-size:.72rem;color:var(--muted);font-weight:700}
+.kpi b{font-family:var(--display);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.timeline{display:grid;gap:8px}
+.cita{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;align-items:start}
+.cita .hr{font-family:var(--display);font-weight:800;font-size:1.05rem;padding-top:10px;font-variant-numeric:tabular-nums}
+.cita .hr small{display:block;font-family:var(--body);font-weight:500;font-size:.72rem;color:var(--muted)}
+.card{border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:10px 12px;display:grid;gap:6px;background:var(--panel);min-width:0}
+.card.Confirmada{border-left-color:var(--ok)}.card.Pendiente{border-left-color:var(--warn)}.card.Completada{border-left-color:var(--info);opacity:.85}.card.Cancelada{border-left-color:var(--bad);opacity:.6}
+.card .t{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.card h3{font-family:var(--body);font-size:1rem;font-weight:700}
+.card p{margin:0;color:var(--muted);font-size:.88rem}
+.pill{font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.pill.Confirmada{background:var(--okbg);color:var(--ok)}.pill.Pendiente{background:var(--warnbg);color:var(--warn)}.pill.Completada{background:var(--infobg);color:var(--info)}.pill.Cancelada{background:var(--badbg);color:var(--bad)}
+.pill.web{background:var(--soft);color:var(--accent)}
+.libre{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;align-items:center}
+.libre span{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.libre button{border:1px dashed var(--line);background:none;border-radius:10px;padding:8px;text-align:left;color:var(--muted);cursor:pointer;font-size:.85rem}
+.banner{border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:.9rem}
+.banner.warn{background:var(--warnbg);color:var(--warn)}.banner.bad{background:var(--badbg);color:var(--bad)}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:18px;text-align:center;color:var(--muted)}
+/* slots */
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+.slot{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 4px;font-weight:700;cursor:pointer;font-variant-numeric:tabular-nums}
+.slot[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+/* lists */
+.list{display:grid;gap:8px}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.item h3{font-family:var(--body);font-size:.98rem;font-weight:700}
+.item p{margin:0;font-size:.84rem;color:var(--muted)}
+.item .acts{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.amt{font-family:var(--display);font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
+.hor{display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr));gap:6px;align-items:center}
+.hor .h{font-size:.72rem;font-weight:700;color:var(--muted)}
+@media (max-width:560px){.hor{grid-template-columns:78px repeat(4,minmax(0,1fr))}.hor input{padding:8px 4px;font-size:.85rem}}
+.chk{display:flex;gap:6px;align-items:center;font-weight:600;font-size:.88rem;color:var(--fg)}
+.chk input{width:auto}
+.linkbox{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:10px;padding:8px 10px;font-size:.88rem;word-break:break-all}
+.linkbox code{flex:1;min-width:0}
+/* reserva cliente */
+.res{max-width:560px;margin:0 auto;width:100%}
+.hero{background:var(--ink);color:var(--ink-fg);border-radius:20px;padding:20px;display:grid;gap:10px}
+.hero .logo{width:56px;height:56px;border-radius:16px;font-size:1.4rem}
+.hero h2{font-size:1.6rem;font-weight:800}
+.hero p{margin:0;opacity:.8;font-size:.9rem}
+.steps{display:flex;gap:6px}
+.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.steps i.on{background:var(--accent)}
+.svc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:12px 14px;cursor:pointer;width:100%}
+.svc b{font-size:1rem}.svc small{color:var(--muted)}.svc .amt{grid-row:1/3;grid-column:2;align-self:center}
+.svc[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.cat{font-size:.72rem;font-weight:800;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
+.okbig{display:grid;justify-items:center;text-align:center;gap:8px;padding:10px}
+.okbig .ic{width:64px;height:64px;border-radius:50%;background:var(--okbg);color:var(--ok);display:grid;place-items:center}
+.sum{display:grid;gap:4px;background:var(--bg);border-radius:12px;padding:12px;font-size:.92rem}
+.sum div{display:flex;justify-content:space-between;gap:8px}
+.sum span{color:var(--muted)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:no-preference){.btn,.slot,.svc,.day{transition:transform .1s,background .15s}.btn:active,.slot:active,.svc:active{transform:scale(.97)}}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+
+
+<header class="top">
+  <div class="top-in">
+    <div class="logo" id="tLogo">B</div>
+    <div class="grow"><h1 id="tNom">Mi negocio</h1><small id="tRubro">Agenda Pro Belleza</small></div>
+    <div class="modo" role="group" aria-label="Vista">
+      <button type="button" id="mPro" aria-pressed="true">Profesional</button>
+      <button type="button" id="mCli" aria-pressed="false">Link de reserva</button>
+    </div>
+  </div>
+</header>
+<div class="demo" id="demoBar">Modo demostración: datos de ejemplo guardados solo en este equipo.</div>
+<div class="demo" id="loadBar" hidden>Cargando…</div>
+
+<!-- ===================== INGRESO ===================== -->
+<main class="wrap res" id="auth" hidden>
+  <div class="hero"><h2>Agenda Pro Belleza</h2><p>Tu agenda y tu link de reservas para barbería, peluquería, uñas, estética y más.</p></div>
+  <section class="panel">
+    <div class="modo" role="group" aria-label="Ingreso" style="background:var(--bg)"><button type="button" id="aIn" aria-pressed="true" style="color:var(--fg)">Ingresar</button><button type="button" id="aUp" aria-pressed="false" style="color:var(--fg)">Crear cuenta</button></div>
+    <div class="fields">
+      <div class="f full"><label for="aMail">Correo</label><input id="aMail" type="email" autocomplete="email" inputmode="email"></div>
+      <div class="f full"><label for="aPass">Contraseña</label><input id="aPass" type="password" autocomplete="current-password"></div>
+    </div>
+    <div id="aUpExtra" hidden class="fields">
+      <div class="f full"><label for="aNeg">Nombre de tu negocio</label><input id="aNeg" placeholder="Ej: Barbería Matiz"></div>
+      <div class="f"><label for="aRubro">Rubro</label><select id="aRubro"><option>Barbería</option><option>Peluquería</option><option>Salón de belleza</option><option>Manicure y uñas</option><option>Estética y spa</option><option>Pestañas y cejas</option><option>Maquillaje</option><option>Otro</option></select></div>
+      <div class="f"><label for="aSlug">Nombre en tu link</label><input id="aSlug" placeholder="barberia-matiz"></div>
+    </div>
+    <p class="msg" id="aMsg" hidden></p>
+    <button class="btn pri" id="aGo" type="button">Ingresar</button>
+    <button class="btn ghost sm" id="aReset" type="button">Olvidé mi contraseña</button>
+  </section>
+</main>
+
+
+<!-- ===================== PROFESIONAL ===================== -->
+<main class="wrap" id="pro">
+  <div class="banner" id="linkBanner" hidden></div>
+  <!-- AGENDA -->
+  <section id="v-agenda" class="wrap" style="padding:0">
+    <div class="panel">
+      <h2><span id="agTitulo">Hoy</span><span class="row"><button class="btn sm ghost" id="agHoy" type="button">Hoy</button><button class="btn sm pri" id="agNueva" type="button">+ Cita</button></span></h2>
+      <div class="strip" id="strip" role="group" aria-label="Días"></div>
+      <div class="kpis"><div class="kpi"><span>Citas</span><b id="kN">0</b></div><div class="kpi"><span>Por cobrar</span><b id="kM">$0</b></div><div class="kpi"><span>Horas libres</span><b id="kL">0</b></div></div>
+    </div>
+    <div class="panel"><div class="timeline" id="timeline"></div></div>
+  </section>
+
+  <!-- NUEVA / EDITAR CITA -->
+  <section id="v-cita" hidden style="padding:0" class="wrap">
+    <div class="panel">
+      <h2><span id="ciTitulo">Nueva cita</span><button class="btn sm ghost" id="ciVolver" type="button">Volver</button></h2>
+      <div class="fields">
+        <div class="f"><label for="ciNom">Cliente</label><input id="ciNom" list="dlCli" autocomplete="off" placeholder="Nombre"></div>
+        <div class="f"><label for="ciTel">WhatsApp</label><input id="ciTel" inputmode="tel" placeholder="+56 9 1234 5678"></div>
+        <datalist id="dlCli"></datalist>
+        <div class="f full"><label for="ciSvc">Servicio</label><select id="ciSvc"></select></div>
+        <div class="f"><label for="ciFecha">Fecha</label><input id="ciFecha" type="date"></div>
+        <div class="f"><label for="ciEstado">Estado</label><select id="ciEstado"><option>Confirmada</option><option>Pendiente</option><option>Completada</option><option>Cancelada</option></select></div>
+        <div class="f full"><label>Hora disponible</label><div class="slots" id="ciSlots"></div><p class="hint" id="ciSlotsHint"></p></div>
+        <div class="f full"><label for="ciNota">Nota</label><textarea id="ciNota" placeholder="Ej: degradado bajo, trae foto"></textarea></div>
+      </div>
+      <p class="msg" id="ciMsg" hidden></p>
+      <div class="row"><button class="btn pri" id="ciGuardar" type="button" style="flex:1">Guardar cita</button><button class="btn bad" id="ciBorrar" type="button" hidden>Eliminar</button></div>
+      <div class="row" id="ciBorrarOk" hidden><span class="hint">¿Eliminar esta cita?</span><button class="btn sm bad" id="ciBorrarSi" type="button">Sí, eliminar</button><button class="btn sm ghost" id="ciBorrarNo" type="button">No</button></div>
+    </div>
+  </section>
+
+  <!-- CLIENTES -->
+  <section id="v-clientes" hidden style="padding:0" class="wrap">
+    <div class="panel">
+      <h2>Clientes <span class="hint" id="cliN"></span></h2>
+      <input id="cliBus" placeholder="Buscar por nombre o teléfono" aria-label="Buscar cliente">
+      <div class="list" id="cliList"></div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section id="v-ajustes" hidden style="padding:0" class="wrap">
+    <div class="panel">
+      <h2>Tu link de reservas</h2>
+      <p class="hint">Compártelo en Instagram, en tu estado de WhatsApp o en un código QR en el local. Tus clientes eligen servicio, día y hora, y la cita aparece en tu agenda.</p>
+      <div class="linkbox"><code id="link">—</code><button class="btn sm dark" id="copiar" type="button">Copiar</button></div>
+      <div class="row"><button class="btn sm ghost" id="verLink" type="button">Ver como cliente</button></div>
+      <p class="hint" id="linkEstado"></p>
+    </div>
+    <div class="panel">
+      <h2>Mi negocio</h2>
+      <div class="fields">
+        <div class="f"><label for="nNom">Nombre del negocio</label><input id="nNom"></div>
+        <div class="f"><label for="nRubro">Rubro</label><select id="nRubro"><option>Barbería</option><option>Peluquería</option><option>Salón de belleza</option><option>Manicure y uñas</option><option>Estética y spa</option><option>Pestañas y cejas</option><option>Maquillaje</option><option>Otro</option></select></div>
+        <div class="f"><label for="nWa">WhatsApp del negocio</label><input id="nWa" inputmode="tel" placeholder="+56 9 ..."></div>
+        <div class="f"><label for="nDir">Dirección</label><input id="nDir"></div>
+        <div class="f"><label for="nSlug">Nombre en el link</label><input id="nSlug" placeholder="ej: barberia-matiz"></div>
+        <div class="f"><label for="nLogo">Logo o foto</label><input id="nLogo" type="file" accept="image/png,image/jpeg"></div>
+        <div class="f full"><label for="nRecord">Mensaje de recordatorio (WhatsApp)</label><textarea id="nRecord"></textarea><p class="hint">Puedes usar {nombre}, {servicio}, {fecha}, {hora} y {negocio}.</p></div>
+        <div class="f"><label for="nAnt">Reservas con anticipación mínima (horas)</label><input id="nAnt" type="number" min="0" inputmode="numeric"></div>
+        <div class="f"><label for="nDias">Días a mostrar a los clientes</label><input id="nDias" type="number" min="1" max="60" inputmode="numeric"></div>
+        <label class="chk f full"><input type="checkbox" id="nAuto"> Confirmar automáticamente las reservas por link</label>
+      </div>
+      <div class="row"><button class="btn pri" id="nGuardar" type="button">Guardar</button></div>
+      <p class="msg" id="nMsg" hidden></p>
+    </div>
+    <div class="panel">
+      <h2>Servicios <button class="btn sm ghost" id="sAdd" type="button">+ Servicio</button></h2>
+      <div class="list" id="svcList"></div>
+    </div>
+    <div class="panel">
+      <h2>Horario de atención</h2>
+      <div class="hor"><span class="h">Día</span><span class="h">Abre</span><span class="h">Cierra</span><span class="h">Colación desde</span><span class="h">hasta</span></div>
+      <div id="horList" style="display:grid;gap:6px"></div>
+      <div class="row"><button class="btn pri" id="hGuardar" type="button">Guardar horario</button></div>
+      <h2 style="margin-top:6px">Días bloqueados</h2>
+      <p class="hint">Vacaciones, feriados o turnos fuera. Esos días no se pueden reservar.</p>
+      <div class="row"><input id="bFecha" type="date" style="width:auto;flex:1" aria-label="Fecha a bloquear"><input id="bMotivo" placeholder="Motivo" style="width:auto;flex:2" aria-label="Motivo"><button class="btn sm dark" id="bAdd" type="button">Bloquear</button></div>
+      <div class="list" id="bList"></div>
+      <p class="msg" id="hMsg" hidden></p>
+    </div>
+    <div class="panel" id="cuenta" hidden>
+      <h2>Mi cuenta</h2>
+      <p class="hint" id="cuentaMail"></p>
+      <div class="row"><button class="btn ghost" id="salir" type="button">Cerrar sesión</button></div>
+    </div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="v-admin" hidden style="padding:0" class="wrap">
+    <div class="panel">
+      <h2>Panel de administración <button class="btn sm ghost" id="admRef" type="button">Actualizar</button></h2>
+      <p class="hint">Todos los negocios registrados. Cuando un cliente te pague, súmale tiempo a su link de reservas. La agenda les sigue funcionando aunque el link venza.</p>
+      <div class="kpis"><div class="kpi"><span>Negocios</span><b id="admN">0</b></div><div class="kpi"><span>Link activo</span><b id="admA">0</b></div><div class="kpi"><span>Vencen en 30 días</span><b id="admV">0</b></div></div>
+      <input id="admBus" placeholder="Buscar negocio, link o correo" aria-label="Buscar negocio">
+      <div class="list" id="admList"></div>
+      <p class="msg" id="admMsg" hidden></p>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== CLIENTE (LINK DE RESERVA) ===================== -->
+<main class="wrap res" id="cli" hidden>
+  <div class="hero">
+    <div class="row"><div class="logo" id="rLogo">B</div><div><h2 id="rNom">Negocio</h2><p id="rInfo"></p></div></div>
+    <div class="steps" aria-hidden="true"><i id="st1" class="on"></i><i id="st2"></i><i id="st3"></i></div>
+  </div>
+  <section class="panel" id="r0" hidden><div class="empty" id="r0t"></div></section>
+  <section class="panel" id="r1">
+    <h2>1. Elige tu servicio</h2>
+    <div class="list" id="rSvcs"></div>
+  </section>
+  <section class="panel" id="r2" hidden>
+    <h2>2. Elige día y hora <button class="btn sm ghost" id="r2Volver" type="button">Volver</button></h2>
+    <div class="strip" id="rStrip" role="group" aria-label="Días disponibles"></div>
+    <div class="slots" id="rSlots"></div>
+    <p class="hint" id="rSlotsHint"></p>
+  </section>
+  <section class="panel" id="r3" hidden>
+    <h2>3. Tus datos <button class="btn sm ghost" id="r3Volver" type="button">Volver</button></h2>
+    <div class="sum" id="rSum"></div>
+    <div class="fields">
+      <div class="f"><label for="rNomC">Nombre</label><input id="rNomC" autocomplete="name"></div>
+      <div class="f"><label for="rTel">WhatsApp</label><input id="rTel" inputmode="tel" autocomplete="tel" placeholder="+56 9 1234 5678"></div>
+      <div class="f full"><label for="rNota">Comentario (opcional)</label><textarea id="rNota"></textarea></div>
+    </div>
+    <p class="msg" id="rMsg" hidden></p>
+    <button class="btn pri" id="rReservar" type="button">Reservar hora</button>
+  </section>
+  <section class="panel" id="r4" hidden>
+    <div class="okbig"><div class="ic"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l5 5L20 7"/></svg></div>
+      <h2 id="rOkT">¡Reserva lista!</h2><p class="hint" id="rOkP"></p></div>
+    <div class="sum" id="rSum2"></div>
+    <div class="row"><button class="btn ghost" id="rOtra" type="button" style="flex:1">Hacer otra reserva</button></div>
+    <p class="hint" id="rWaHint"></p>
+  </section>
+</main>
+
+<nav class="tabs" id="tabs" role="tablist">
+  <button type="button" role="tab" data-v="agenda" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</button>
+  <button type="button" role="tab" data-v="cita" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Nueva cita</button>
+  <button type="button" role="tab" data-v="clientes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 010 7M18 14.8c1.9.7 3.1 2.5 3.5 5.2"/></svg>Clientes</button>
+  <button type="button" role="tab" data-v="admin" aria-selected="false" id="tabAdmin" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Admin</button>
+  <button type="button" role="tab" data-v="ajustes" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>Mi negocio</button>
+</nav>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clp=n=>'$'+Math.round(n||0).toLocaleString('es-CL');
+const uid=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const toMin=h=>{if(!h)return null;const[a,b]=h.split(':').map(Number);return a*60+b};
+const toHM=m=>pad(Math.floor(m/60))+':'+pad(m%60);
+const DIAS=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const DC=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const fechaLarga=s=>{const d=new Date(s+'T12:00');return DIAS[d.getDay()]+' '+d.getDate()+' de '+d.toLocaleDateString('es-CL',{month:'long'})};
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const telWa=t=>{let d=String(t||'').replace(/\D/g,'');if(d.length===9&&d[0]==='9')d='56'+d;if(d.length===8)d='569'+d;return d};
+const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+
+// ================= DATOS =================
+// Capa de datos intercambiable: ahora en modo demostración (este equipo). En la etapa 2 se conecta a internet.
+const DEMO_KEY='agenda_demo_v1';
+function semilla(){
+  const hoy=new Date();const d0=ymd(hoy);const d1=ymd(new Date(hoy.getTime()+864e5));const dm1=ymd(new Date(hoy.getTime()-864e5));
+  const S=[
+    {id:'s1',cat:'Barbería',n:'Corte de pelo',d:30,p:10000},
+    {id:'s2',cat:'Barbería',n:'Corte + barba',d:45,p:15000},
+    {id:'s3',cat:'Barbería',n:'Perfilado de barba',d:20,p:6000},
+    {id:'s4',cat:'Barbería',n:'Corte niño',d:30,p:8000},
+    {id:'s5',cat:'Color',n:'Platinado / decoloración',d:120,p:45000},
+    {id:'s6',cat:'Uñas',n:'Manicure tradicional',d:45,p:12000},
+    {id:'s7',cat:'Uñas',n:'Uñas acrílicas',d:90,p:25000}];
+  const C=(dia,h,svc,nom,tel,est,web)=>({id:uid(),fecha:dia,hora:h,svc,nom,tel,estado:est,origen:web?'link':'agenda',nota:'',creada:new Date().toISOString()});
+  return{
+    negocio:{nom:'Barbería Ejemplo',rubro:'Barbería',wa:'+56 9 1234 5678',dir:'Av. Francisco de Aguirre 123, La Serena',slug:'barberia-ejemplo',logo:'',
+      record:'Hola {nombre} 👋 te recordamos tu hora en {negocio}: {servicio} el {fecha} a las {hora}. Si no puedes asistir, avísanos por aquí. ¡Te esperamos!',
+      ant:2,dias:21,auto:true,
+      horario:[null,['10:00','20:00','14:00','15:00'],['10:00','20:00','14:00','15:00'],['10:00','20:00','14:00','15:00'],['10:00','20:00','14:00','15:00'],['10:00','21:00','14:00','15:00'],['10:00','17:00','','']],
+      bloqueos:[]},
+    servicios:S,
+    citas:[C(dm1,'11:00','s2','Matías Rojas','+56 9 8765 4321','Completada'),C(dm1,'17:00','s1','Felipe Araya','+56 9 5555 1212','Completada'),
+      C(d0,'10:30','s1','Matías Rojas','+56 9 8765 4321','Confirmada'),C(d0,'11:15','s2','Joaquín Pérez','+56 9 4444 3322','Confirmada',true),
+      C(d0,'15:00','s6','Camila Torres','+56 9 7777 8899','Pendiente',true),C(d0,'16:30','s3','Diego Muñoz','+56 9 2222 1111','Confirmada'),
+      C(d0,'18:00','s5','Valentina Soto','+56 9 3333 6666','Confirmada',true),C(d1,'12:00','s4','Tomás Rojas','+56 9 8765 4321','Confirmada'),C(d1,'19:00','s2','Felipe Araya','+56 9 5555 1212','Pendiente',true)]
+  };
+}
+let D=ls.get(DEMO_KEY,null);if(!D||!D.negocio)D=semilla();
+const save=()=>ls.set(DEMO_KEY,D);
+const svcOf=id=>D.servicios.find(s=>s.id===id);
+const infoC=c=>{const s=svcOf(c.svc);return{n:c.sn||(s?s.n:'Servicio'),p:c.p!=null?c.p:(s?s.p:0),d:c.dur||(s?s.d:30)}};
+// ---- modo: demostración (sin config) o en línea (Firebase) ----
+const CFG=(window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey&&!/PEGA/.test(window.FIREBASE_CONFIG.apiKey))?window.FIREBASE_CONFIG:null, ONLINE=!!CFG;
+const ADMIN=String(window.APP_ADMIN||'').toLowerCase(), VEND_WA=window.APP_VENDEDOR_WA||'';
+const PARAM_N=new URLSearchParams(location.search).get('n');
+const CLIENTE_ONLINE=ONLINE&&!!PARAM_N;
+let OCUP={}; // ocupación pública por fecha (vista cliente en línea)
+const FB={db:null,auth:null,user:null,uid:null,neg:null,unsub:[]};
+const H2M=h=>{const m={};for(let i=0;i<7;i++){const v=h[i];m['d'+i]=v?{a:v[0]||'',c:v[1]||'',d1:v[2]||'',d2:v[3]||''}:null}return m};
+const M2H=m=>{const o=[];for(let i=0;i<7;i++){const v=m&&m['d'+i];o.push(v?[v.a,v.c,v.d1,v.d2]:null)}return o};
+const HORARIO_BASE=[null,['10:00','19:00','14:00','15:00'],['10:00','19:00','14:00','15:00'],['10:00','19:00','14:00','15:00'],['10:00','19:00','14:00','15:00'],['10:00','19:00','14:00','15:00'],['10:00','15:00','','']];
+const SVC_BASE={'Barbería':[['Corte de pelo',30,10000],['Corte + barba',45,15000],['Perfilado de barba',20,6000]],'Peluquería':[['Corte',45,15000],['Brushing',45,15000],['Color raíz',90,35000]],
+ 'Manicure y uñas':[['Manicure tradicional',45,12000],['Esmaltado permanente',60,15000],['Uñas acrílicas',90,25000]],'Pestañas y cejas':[['Lifting de pestañas',60,20000],['Diseño de cejas',30,10000]],
+ 'Estética y spa':[['Limpieza facial',60,25000],['Masaje relajante',60,25000]],'Maquillaje':[['Maquillaje social',60,30000]],'Salón de belleza':[['Corte',45,15000],['Manicure',45,12000]],'Otro':[['Servicio',60,15000]]};
+function fromDoc(x){return{nom:x.nom||'',rubro:x.rubro||'Otro',wa:x.wa||'',dir:x.dir||'',slug:x.slug||'',logo:x.logo||'',record:x.record||'',ant:x.ant??2,dias:x.dias??21,auto:x.auto!==false,horario:M2H(x.horario),bloqueos:x.bloqueos||[],linkHasta:x.linkHasta||0}}
+const linkActivo=()=>!ONLINE||(D.negocio.linkHasta||0)>Date.now();
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+async function initFirebase(){const v='10.12.2',b='https://www.gstatic.com/firebasejs/'+v+'/';
+  await loadScript(b+'firebase-app-compat.js');await loadScript(b+'firebase-auth-compat.js');await loadScript(b+'firebase-firestore-compat.js');
+  firebase.initializeApp(CFG);FB.db=firebase.firestore();FB.auth=firebase.auth()}
+const negRef=uid=>FB.db.doc('negocios/'+uid);
+// ---- operaciones de guardado (iguales para demo y en línea) ----
+const Store={
+  async saveNegocio(){if(!ONLINE){save();return}const n=D.negocio;
+    await negRef(FB.uid).update({nom:n.nom,rubro:n.rubro,wa:n.wa,dir:n.dir,logo:n.logo||'',record:n.record,ant:n.ant,dias:n.dias,auto:!!n.auto,horario:H2M(n.horario),bloqueos:n.bloqueos||[],servicios:D.servicios})},
+  async recompute(f){if(!ONLINE)return;const b=D.citas.filter(c=>c.fecha===f&&c.estado!=='Cancelada').map(c=>{const i=toMin(c.hora);return{i,f:i+infoC(c).d}});
+    await negRef(FB.uid).collection('ocupado').doc(f).set({f,b})},
+  async saveCita(c,prevFecha){const s=svcOf(c.svc);if(s){c.sn=s.n;c.p=s.p;c.dur=s.d}
+    if(!ONLINE){save();return}const {id,...data}=c;await negRef(FB.uid).collection('citas').doc(id).set(JSON.parse(JSON.stringify(data)));
+    await Store.recompute(c.fecha);if(prevFecha&&prevFecha!==c.fecha)await Store.recompute(prevFecha)},
+  async deleteCita(c){if(!ONLINE){save();return}await negRef(FB.uid).collection('citas').doc(c.id).delete();await Store.recompute(c.fecha)},
+  async changeSlug(nuevo){if(!ONLINE){D.negocio.slug=nuevo;save();return}const viejo=D.negocio.slug;if(nuevo===viejo)return;
+    await FB.db.runTransaction(async tx=>{const r=FB.db.doc('slugs/'+nuevo);const x=await tx.get(r);if(x.exists)throw{code:'slug'};tx.set(r,{uid:FB.uid});if(viejo)tx.delete(FB.db.doc('slugs/'+viejo));tx.update(negRef(FB.uid),{slug:nuevo})})},
+  async reservar(c){if(!ONLINE){D.citas.push(c);save();return}const uidN=D.negocio._uid;const ocRef=negRef(uidN).collection('ocupado').doc(c.fecha);const cr=negRef(uidN).collection('citas').doc();
+    const ini=toMin(c.hora),fin=ini+c.dur;
+    await FB.db.runTransaction(async tx=>{const s=await tx.get(ocRef);const b=s.exists?(s.data().b||[]):[];if(b.some(x=>ini<x.f&&fin>x.i))throw{code:'tomada'};
+      const {id,...data}=c;tx.set(cr,data);tx.set(ocRef,{f:c.fecha,b:b.concat({i:ini,f:fin})})});
+    (OCUP[c.fecha]=OCUP[c.fecha]||[]).push([ini,fin])}
+};
+
+// ================= DISPONIBILIDAD =================
+const PASO=15;
+function libres(fecha,dur,ignorarId){
+  const n=D.negocio,d=new Date(fecha+'T12:00'),h=n.horario[d.getDay()];
+  if(!h||!h[0]||!h[1])return[];if((n.bloqueos||[]).some(b=>b.fecha===fecha))return[];
+  const ab=toMin(h[0]),ci=toMin(h[1]),c1=toMin(h[2]),c2=toMin(h[3]);
+  const ocup=CLIENTE_ONLINE?(OCUP[fecha]||[]).map(x=>x.slice()):D.citas.filter(c=>c.fecha===fecha&&c.estado!=='Cancelada'&&c.id!==ignorarId).map(c=>{const i=toMin(c.hora);return[i,i+infoC(c).d]});
+  if(c1!=null&&c2!=null)ocup.push([c1,c2]);
+  const ahora=new Date(),hoy=ymd(ahora)===fecha,minHoy=ahora.getHours()*60+ahora.getMinutes();
+  const out=[];for(let t=ab;t+dur<=ci;t+=PASO){if(hoy&&t<minHoy)continue;if(ocup.some(([a,b])=>t<b&&t+dur>a))continue;out.push(t)}
+  return out;
+}
+
+// ================= ENCABEZADO =================
+function paintTop(){const n=D.negocio;$('tNom').textContent=n.nom||'Mi negocio';$('tRubro').textContent=(n.rubro||'')+' · Agenda Pro Belleza';
+  [$('tLogo'),$('rLogo')].forEach(el=>{el.innerHTML=n.logo?`<img src="${n.logo}" alt="">`:esc(initials(n.nom))})}
+
+// ================= AGENDA =================
+let dia=ymd(new Date());
+function paintStrip(){const s=$('strip');const base=new Date();base.setDate(base.getDate()-3);let h='';
+  for(let i=0;i<21;i++){const d=new Date(base);d.setDate(base.getDate()+i);const f=ymd(d);const n=D.citas.filter(c=>c.fecha===f&&c.estado!=='Cancelada').length;const off=!D.negocio.horario[d.getDay()]||(D.negocio.bloqueos||[]).some(b=>b.fecha===f);
+    h+=`<button type="button" class="day${off?' off':''}" data-f="${f}" aria-pressed="${f===dia}"><small>${DC[d.getDay()]}</small><b>${d.getDate()}</b>${n?'<i></i>':''}</button>`}
+  s.innerHTML=h;const sel=s.querySelector('[aria-pressed="true"]');if(sel)sel.scrollIntoView({block:'nearest',inline:'center'})}
+$('strip').addEventListener('click',e=>{const b=e.target.closest('.day');if(!b)return;dia=b.dataset.f;paintAgenda()});
+$('agHoy').onclick=()=>{dia=ymd(new Date());paintAgenda()};
+$('agNueva').onclick=()=>abrirCita(null,dia);
+function paintAgenda(){
+  const hoy=ymd(new Date());$('agTitulo').textContent=dia===hoy?'Hoy · '+fechaLarga(dia).split(' ').slice(1).join(' '):fechaLarga(dia);
+  paintStrip();
+  const cs=D.citas.filter(c=>c.fecha===dia).sort((a,b)=>a.hora.localeCompare(b.hora));
+  const act=cs.filter(c=>c.estado!=='Cancelada');
+  $('kN').textContent=act.length;$('kM').textContent=clp(act.filter(c=>c.estado!=='Completada').reduce((a,c)=>a+(infoC(c).p||0),0));
+  const lib=libres(dia,30);$('kL').textContent=lib.length?Math.round(lib.length*PASO/60*10)/10:0;
+  const d=new Date(dia+'T12:00'),h=D.negocio.horario[d.getDay()],bl=(D.negocio.bloqueos||[]).find(b=>b.fecha===dia);
+  if(!cs.length){$('timeline').innerHTML=`<div class="empty">${bl?'Día bloqueado: '+esc(bl.motivo||'sin atención'):!h?'No atiendes este día.':'Sin citas este día.'}${h&&!bl?'<br><br><button class="btn pri" type="button" data-new="'+(lib[0]!=null?toHM(lib[0]):'')+'">Agendar una cita</button>':''}</div>`;return}
+  const items=cs.map(c=>({t:toMin(c.hora),c}));
+  lib.filter(t=>t%60===0).forEach(t=>{if(!cs.some(c=>{const s=infoC(c),i=toMin(c.hora);return t>=i&&t<i+s.d}))items.push({t,libre:true})});
+  items.sort((x,y)=>x.t-y.t||(x.libre?1:-1));
+  let out='';
+  items.forEach(it=>{if(it.libre){out+=`<div class="libre"><span>${toHM(it.t)}</span><button type="button" data-new="${toHM(it.t)}">Libre · agendar</button></div>`;return}
+    const c=it.c,s=infoC(c);
+    out+=`<div class="cita"><div class="hr">${esc(c.hora)}<small>${s?s.d+' min':''}</small></div>
+    <div class="card ${esc(c.estado)}"><div class="t"><h3>${esc(c.nom)}</h3><span class="row" style="gap:4px">${c.origen==='link'?'<span class="pill web">Por link</span>':''}<span class="pill ${esc(c.estado)}">${esc(c.estado)}</span></span></div>
+      <p>${esc(s?s.n:'Servicio')} · ${clp(s?.p)}${c.nota?' · '+esc(c.nota):''}</p>
+      <div class="row">${c.estado==='Pendiente'?`<button class="btn sm pri" data-a="conf" data-id="${c.id}" type="button">Confirmar</button>`:''}
+      ${c.tel&&c.estado!=='Cancelada'&&c.estado!=='Completada'?`<button class="btn sm wa" data-a="wa" data-id="${c.id}" type="button">Recordar por WhatsApp</button>`:''}
+      ${c.estado==='Confirmada'?`<button class="btn sm ghost" data-a="hecha" data-id="${c.id}" type="button">Atendida</button>`:''}
+      <button class="btn sm ghost" data-a="edit" data-id="${c.id}" type="button">Editar</button></div></div></div>`});
+  $('timeline').innerHTML=out;
+}
+$('timeline').addEventListener('click',e=>{const nb=e.target.closest('[data-new]');if(nb){abrirCita(null,dia,nb.dataset.new);return}
+  const b=e.target.closest('[data-a]');if(!b)return;const c=D.citas.find(x=>x.id===b.dataset.id);if(!c)return;
+  if(b.dataset.a==='conf'){c.estado='Confirmada';paintAgenda();guardar(Store.saveCita(c))}
+  if(b.dataset.a==='hecha'){c.estado='Completada';paintAgenda();guardar(Store.saveCita(c))}
+  if(b.dataset.a==='edit')abrirCita(c);
+  if(b.dataset.a==='wa'){const s=infoC(c);const t=(D.negocio.record||'').replace(/{nombre}/g,c.nom.split(' ')[0]).replace(/{servicio}/g,s?s.n:'').replace(/{fecha}/g,fechaLarga(c.fecha)).replace(/{hora}/g,c.hora).replace(/{negocio}/g,D.negocio.nom);
+    const a=document.createElement('a');a.href='https://wa.me/'+telWa(c.tel)+'?text='+encodeURIComponent(t);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
+});
+
+// ================= CITA =================
+let ed=null,horaSel=null;
+function fillSvcSelect(){$('ciSvc').innerHTML=D.servicios.map(s=>`<option value="${s.id}">${esc(s.n)} · ${s.d} min · ${clp(s.p)}</option>`).join('')}
+function abrirCita(c,fecha,hora){ed=c;show('cita');fillSvcSelect();
+  $('dlCli').innerHTML=clientes().map(x=>`<option value="${esc(x.nom)}">`).join('');
+  $('ciTitulo').textContent=c?'Editar cita':'Nueva cita';$('ciBorrar').hidden=!c;$('ciBorrarOk').hidden=true;$('ciMsg').hidden=true;
+  $('ciNom').value=c?c.nom:'';$('ciTel').value=c?c.tel:'';$('ciSvc').value=c?c.svc:(D.servicios[0]?.id||'');$('ciFecha').value=c?c.fecha:(fecha||dia);$('ciEstado').value=c?c.estado:'Confirmada';$('ciNota').value=c?c.nota:'';
+  horaSel=c?c.hora:(hora||null);paintSlots();$('ciNom').focus()}
+function paintSlots(){const s=svcOf($('ciSvc').value),f=$('ciFecha').value;if(!s||!f){$('ciSlots').innerHTML='';return}
+  let L=libres(f,s.d,ed&&ed.id).map(toHM);if(horaSel&&!L.includes(horaSel))L=[horaSel,...L].sort();
+  $('ciSlots').innerHTML=L.map(h=>`<button type="button" class="slot" aria-pressed="${h===horaSel}" data-h="${h}">${h}</button>`).join('');
+  $('ciSlotsHint').textContent=L.length?'':'No quedan horas libres ese día para este servicio.'}
+['ciSvc','ciFecha'].forEach(id=>$(id).addEventListener('change',paintSlots));
+$('ciSlots').addEventListener('click',e=>{const b=e.target.closest('.slot');if(!b)return;horaSel=b.dataset.h;paintSlots()});
+$('ciNom').addEventListener('change',()=>{const x=clientes().find(c=>c.nom.toLowerCase()===$('ciNom').value.trim().toLowerCase());if(x&&!$('ciTel').value)$('ciTel').value=x.tel});
+$('ciVolver').onclick=()=>show('agenda');
+function cmsg(k,t){const m=$('ciMsg');m.className='msg '+k;m.textContent=t;m.hidden=!t}
+$('ciGuardar').onclick=()=>{const nom=$('ciNom').value.trim();if(!nom){cmsg('bad','Escribe el nombre del cliente.');$('ciNom').focus();return}
+  if(!horaSel){cmsg('bad','Elige una hora.');return}
+  const c=ed||{id:uid(),origen:'agenda',creada:new Date().toISOString()};const prev=ed?ed.fecha:null;
+  Object.assign(c,{nom,tel:$('ciTel').value.trim(),svc:$('ciSvc').value,fecha:$('ciFecha').value,hora:horaSel,estado:$('ciEstado').value,nota:$('ciNota').value.trim()});
+  if(!ed)D.citas.push(c);dia=c.fecha;$('ciGuardar').disabled=true;Store.saveCita(c,prev).then(()=>show('agenda')).catch(()=>cmsg('bad','No se pudo guardar. Revisa tu conexión.')).finally(()=>$('ciGuardar').disabled=false)};
+$('ciBorrar').onclick=()=>{$('ciBorrarOk').hidden=false};
+$('ciBorrarNo').onclick=()=>{$('ciBorrarOk').hidden=true};
+$('ciBorrarSi').onclick=()=>{const c=ed;D.citas=D.citas.filter(x=>x!==c);show('agenda');guardar(Store.deleteCita(c))};
+
+// ================= CLIENTES =================
+function clientes(){const m=new Map();D.citas.forEach(c=>{const k=(telWa(c.tel)||c.nom.toLowerCase());const x=m.get(k)||{nom:c.nom,tel:c.tel,visitas:0,total:0,ultima:'',prox:''};
+  if(c.estado==='Completada'){x.visitas++;x.total+=infoC(c).p||0;if(c.fecha>x.ultima)x.ultima=c.fecha}
+  if((c.estado==='Confirmada'||c.estado==='Pendiente')&&c.fecha>=ymd(new Date())&&(!x.prox||c.fecha<x.prox))x.prox=c.fecha;m.set(k,x)});
+  return[...m.values()].sort((a,b)=>a.nom.localeCompare(b.nom))}
+function paintClientes(){const q=$('cliBus').value.trim().toLowerCase();const L=clientes().filter(c=>!q||(c.nom+' '+c.tel).toLowerCase().includes(q));
+  $('cliN').textContent=clientes().length+' en total';
+  $('cliList').innerHTML=L.length?L.map(c=>`<div class="item"><div><h3>${esc(c.nom)}</h3><p>${esc(c.tel||'Sin teléfono')} · ${c.visitas} visita${c.visitas===1?'':'s'}${c.ultima?' · última '+esc(c.ultima.split('-').reverse().join('-')):''}${c.prox?' · próxima '+esc(c.prox.split('-').reverse().join('-')):''}</p></div><div class="amt">${clp(c.total)}</div>
+    <div class="acts">${c.tel?`<a class="btn sm wa" href="https://wa.me/${telWa(c.tel)}" target="_blank" rel="noopener">WhatsApp</a>`:''}<button class="btn sm ghost" type="button" data-nom="${esc(c.nom)}" data-tel="${esc(c.tel)}">Agendar</button></div></div>`).join(''):'<div class="empty">No hay clientes que coincidan.</div>'}
+$('cliBus').addEventListener('input',paintClientes);
+$('cliList').addEventListener('click',e=>{const b=e.target.closest('[data-nom]');if(!b)return;abrirCita(null,dia);$('ciNom').value=b.dataset.nom;$('ciTel').value=b.dataset.tel});
+
+// ================= AJUSTES =================
+function linkUrl(){return ONLINE?(location.origin+location.pathname+'?n='+(D.negocio.slug||'')).replace(/^https?:\/\//,''):'agendaprobelleza.cl/'+(D.negocio.slug||'mi-negocio')}
+function paintAjustes(){const n=D.negocio;$('link').textContent=linkUrl();
+  $('nNom').value=n.nom;$('nRubro').value=n.rubro;$('nWa').value=n.wa;$('nDir').value=n.dir;$('nSlug').value=n.slug;$('nRecord').value=n.record;$('nAnt').value=n.ant;$('nDias').value=n.dias;$('nAuto').checked=!!n.auto;
+  const lh=D.negocio.linkHasta;$('linkEstado').textContent=!ONLINE?'':linkActivo()?'Link activo hasta el '+new Date(lh).toLocaleDateString('es-CL',{dateStyle:'long'})+'.':'Tu link de reservas está desactivado. Tus clientes no pueden reservar en línea.';
+  $('cuenta').hidden=!ONLINE;if(ONLINE&&FB.user)$('cuentaMail').textContent='Ingresaste como '+FB.user.email;
+  paintSvcs();paintHor();paintBloq()}
+function nmsg(id,k,t){const m=$(id);m.className='msg '+k;m.textContent=t;m.hidden=!t}
+$('nSlug').addEventListener('input',e=>{e.target.value=e.target.value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-+/,'')});
+$('nGuardar').onclick=async()=>{const n=D.negocio;if(!$('nNom').value.trim()){nmsg('nMsg','bad','Escribe el nombre del negocio.');return}
+  const slug=$('nSlug').value.replace(/-+$/,'');if(slug.length<3){nmsg('nMsg','bad','El nombre del link debe tener al menos 3 letras.');return}
+  Object.assign(n,{nom:$('nNom').value.trim(),rubro:$('nRubro').value,wa:$('nWa').value.trim(),dir:$('nDir').value.trim(),record:$('nRecord').value,ant:Math.max(0,+$('nAnt').value||0),dias:Math.min(60,Math.max(1,+$('nDias').value||14)),auto:$('nAuto').checked});
+  $('nGuardar').disabled=true;
+  try{await Store.changeSlug(slug);await Store.saveNegocio();paintTop();paintAjustes();nmsg('nMsg','ok','Datos guardados.')}
+  catch(e){nmsg('nMsg','bad',e&&e.code==='slug'?'Ese nombre de link ya lo usa otro negocio. Prueba con otro.':'No se pudo guardar. Revisa tu conexión.')}
+  finally{$('nGuardar').disabled=false}};
+$('nLogo').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,240/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);D.negocio.logo=c.toDataURL('image/jpeg',.82);paintTop();guardar(Store.saveNegocio()).then(()=>nmsg('nMsg','ok','Logo actualizado.'))};im.src=fr.result};fr.readAsDataURL(f)});
+$('copiar').onclick=async()=>{const t=linkUrl();try{await navigator.clipboard.writeText('https://'+t);$('copiar').textContent='Copiado'}catch(e){const r=document.createRange();r.selectNodeContents($('link'));const s=getSelection();s.removeAllRanges();s.addRange(r)}setTimeout(()=>$('copiar').textContent='Copiar',1500)};
+$('verLink').onclick=()=>{if(!ONLINE){modo('cli');return}const a=document.createElement('a');a.href='https://'+linkUrl();a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};
+// servicios
+let svcEd=null;
+function paintSvcs(){const cats=[...new Set(D.servicios.map(s=>s.cat||'General'))];
+  $('svcList').innerHTML=cats.map(c=>`<div class="cat">${esc(c)}</div>`+D.servicios.filter(s=>(s.cat||'General')===c).map(s=>svcEd===s.id?`<div class="item" data-id="${s.id}"><div class="fields" style="grid-column:1/-1">
+      <div class="f"><label>Servicio</label><input data-k="n" value="${esc(s.n)}"></div><div class="f"><label>Categoría</label><input data-k="cat" value="${esc(s.cat||'')}"></div>
+      <div class="f"><label>Duración (min)</label><input data-k="d" type="number" min="5" step="5" value="${s.d}"></div><div class="f"><label>Precio</label><input data-k="p" type="number" min="0" step="500" value="${s.p}"></div></div>
+      <div class="acts"><button class="btn sm pri" data-s="ok" type="button">Listo</button><button class="btn sm bad" data-s="del" type="button">Eliminar</button></div></div>`
+    :`<div class="item" data-id="${s.id}"><div><h3>${esc(s.n)}</h3><p>${s.d} min</p></div><div class="amt">${clp(s.p)}</div><div class="acts"><button class="btn sm ghost" data-s="ed" type="button">Editar</button></div></div>`).join('')).join('')||'<div class="empty">Agrega tu primer servicio.</div>'}
+let svcT=null;const saveSvcLater=()=>{clearTimeout(svcT);svcT=setTimeout(()=>guardar(Store.saveNegocio()),900)};
+$('svcList').addEventListener('input',e=>{const k=e.target.dataset.k;if(!k)return;const s=D.servicios.find(x=>x.id===e.target.closest('.item').dataset.id);s[k]=(k==='d'||k==='p')?Math.max(0,+e.target.value||0):e.target.value;saveSvcLater()});
+$('svcList').addEventListener('click',e=>{const a=e.target.dataset.s;if(!a)return;const id=e.target.closest('.item').dataset.id;
+  if(a==='ed')svcEd=id;if(a==='ok'){const s=D.servicios.find(x=>x.id===id);if(s&&s.d<5)s.d=5;svcEd=null}
+  if(a==='del'){if(D.citas.some(c=>c.svc===id&&c.fecha>=ymd(new Date())&&c.estado!=='Cancelada')){e.target.textContent='Tiene citas futuras';return}D.servicios=D.servicios.filter(x=>x.id!==id);svcEd=null}
+  guardar(Store.saveNegocio());paintSvcs()});
+$('sAdd').onclick=()=>{const s={id:uid(),cat:D.servicios.at(-1)?.cat||'General',n:'Nuevo servicio',d:30,p:10000};D.servicios.push(s);svcEd=s.id;guardar(Store.saveNegocio());paintSvcs()};
+// horario
+function paintHor(){const H=D.negocio.horario;$('horList').innerHTML=[1,2,3,4,5,6,0].map(i=>{const h=H[i];return `<div class="hor" data-d="${i}"><label class="chk"><input type="checkbox" data-k="on"${h?' checked':''}>${DIAS[i].slice(0,3)}</label>
+  ${[0,1,2,3].map(j=>`<input type="time" data-j="${j}" value="${h?h[j]||'':''}"${h?'':' disabled'} aria-label="${DIAS[i]}">`).join('')}</div>`}).join('')}
+$('horList').addEventListener('change',e=>{if(e.target.dataset.k==='on'){const r=e.target.closest('.hor');r.querySelectorAll('input[type=time]').forEach((x,j)=>{x.disabled=!e.target.checked;if(e.target.checked&&!x.value&&j<2)x.value=j?'19:00':'10:00'})}});
+$('hGuardar').onclick=()=>{const H=[null,null,null,null,null,null,null];let bad='';
+  $('horList').querySelectorAll('.hor').forEach(r=>{const d=+r.dataset.d;if(!r.querySelector('[data-k=on]').checked)return;const v=[...r.querySelectorAll('input[type=time]')].map(x=>x.value);
+    if(!v[0]||!v[1]||toMin(v[0])>=toMin(v[1]))bad=DIAS[d];H[d]=v});
+  if(bad){nmsg('hMsg','bad','Revisa el horario del '+bad+': la hora de cierre debe ser después de la apertura.');return}
+  D.negocio.horario=H;guardar(Store.saveNegocio()).then(()=>nmsg('hMsg','ok','Horario guardado.'));paintAgenda()};
+function paintBloq(){const B=(D.negocio.bloqueos||[]).filter(b=>b.fecha>=ymd(new Date())).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  $('bList').innerHTML=B.map(b=>`<div class="item"><div><h3>${esc(fechaLarga(b.fecha))}</h3><p>${esc(b.motivo||'Sin atención')}</p></div><button class="btn sm ghost" data-del="${b.fecha}" type="button">Quitar</button></div>`).join('')}
+$('bAdd').onclick=()=>{const f=$('bFecha').value;if(!f)return;D.negocio.bloqueos=(D.negocio.bloqueos||[]).filter(b=>b.fecha!==f).concat({fecha:f,motivo:$('bMotivo').value.trim()});$('bFecha').value='';$('bMotivo').value='';guardar(Store.saveNegocio());paintBloq()};
+$('bList').addEventListener('click',e=>{const f=e.target.dataset.del;if(!f)return;D.negocio.bloqueos=D.negocio.bloqueos.filter(b=>b.fecha!==f);guardar(Store.saveNegocio());paintBloq()});
+
+// ================= NAVEGACIÓN =================
+function show(v){['agenda','cita','clientes','ajustes','admin'].forEach(x=>$('v-'+x).hidden=x!==v);if(v==='admin')paintAdmin();
+  document.querySelectorAll('#tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
+  vista=v;if(v==='agenda'){paintAgenda();paintBanner()}if(v==='clientes')paintClientes();if(v==='ajustes')paintAjustes();window.scrollTo(0,0)}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.v==='cita')abrirCita(null,dia);else show(b.dataset.v)});
+function modo(m){$('mPro').setAttribute('aria-pressed',m==='pro');$('mCli').setAttribute('aria-pressed',m==='cli');$('pro').hidden=m!=='pro';$('cli').hidden=m!=='cli';$('tabs').hidden=m!=='pro';
+  document.body.style.paddingBottom=m==='pro'?'':'24px';if(m==='cli')resetReserva();else show('agenda');window.scrollTo(0,0)}
+$('mPro').onclick=()=>modo('pro');$('mCli').onclick=()=>modo('cli');
+
+// ================= RESERVA DEL CLIENTE =================
+let R={svc:null,fecha:null,hora:null};
+function paso(n){[1,2,3,4].forEach(i=>$('r'+i).hidden=i!==n);[1,2,3].forEach(i=>$('st'+i).classList.toggle('on',i<=Math.min(n,3)));window.scrollTo(0,0)}
+function resetReserva(){R={svc:null,fecha:null,hora:null};const n=D.negocio;$('rNom').textContent=n.nom;$('rInfo').textContent=[n.rubro,n.dir].filter(Boolean).join(' · ');paintTop();
+  if(!linkActivo()){[1,2,3,4].forEach(i=>$('r'+i).hidden=true);$('r0').hidden=false;$('r0t').innerHTML='Este negocio no tiene reservas en línea activas por ahora.'+(n.wa?`<br><br><a class="btn wa" href="https://wa.me/${telWa(n.wa)}" target="_blank" rel="noopener">Escribir por WhatsApp</a>`:'');return}
+  const cats=[...new Set(D.servicios.map(s=>s.cat||'General'))];
+  $('rSvcs').innerHTML=cats.map(c=>`<div class="cat">${esc(c)}</div>`+D.servicios.filter(s=>(s.cat||'General')===c).map(s=>`<button type="button" class="svc" data-id="${s.id}" aria-pressed="false"><b>${esc(s.n)}</b><small>${s.d} min</small><span class="amt">${clp(s.p)}</span></button>`).join('')).join('');
+  paso(1)}
+$('rSvcs').addEventListener('click',e=>{const b=e.target.closest('.svc');if(!b)return;R.svc=b.dataset.id;paintDiasCli();paso(2)});
+function diasCli(){const n=D.negocio,out=[],s=svcOf(R.svc);const lim=new Date(Date.now()+(n.ant||0)*36e5);
+  for(let i=0;i<(n.dias||14);i++){const d=new Date();d.setDate(d.getDate()+i);const f=ymd(d);const L=libres(f,s.d).filter(t=>new Date(f+'T'+toHM(t))>=lim);if(L.length)out.push({f,d,L})}return out}
+function paintDiasCli(){const D2=diasCli();if(!R.fecha||!D2.some(x=>x.f===R.fecha))R.fecha=D2[0]?.f||null;
+  $('rStrip').innerHTML=D2.map(x=>`<button type="button" class="day" data-f="${x.f}" aria-pressed="${x.f===R.fecha}"><small>${DC[x.d.getDay()]}</small><b>${x.d.getDate()}</b></button>`).join('');
+  const cur=D2.find(x=>x.f===R.fecha);
+  $('rSlots').innerHTML=cur?cur.L.map(t=>`<button type="button" class="slot" data-h="${toHM(t)}" aria-pressed="false">${toHM(t)}</button>`).join(''):'';
+  $('rSlotsHint').textContent=cur?fechaLarga(cur.f)+' · '+cur.L.length+' horas disponibles':'No hay horas disponibles en los próximos días. Escríbenos por WhatsApp.'}
+$('rStrip').addEventListener('click',e=>{const b=e.target.closest('.day');if(!b)return;R.fecha=b.dataset.f;paintDiasCli()});
+$('rSlots').addEventListener('click',e=>{const b=e.target.closest('.slot');if(!b)return;R.hora=b.dataset.h;const s=svcOf(R.svc);
+  $('rSum').innerHTML=`<div><span>Servicio</span><b>${esc(s.n)}</b></div><div><span>Día</span><b>${esc(fechaLarga(R.fecha))}</b></div><div><span>Hora</span><b>${R.hora} (${s.d} min)</b></div><div><span>Valor</span><b>${clp(s.p)}</b></div>`;
+  $('rMsg').hidden=true;paso(3);$('rNomC').focus()});
+$('r2Volver').onclick=()=>paso(1);$('r3Volver').onclick=()=>{paintDiasCli();paso(2)};
+$('rReservar').onclick=async()=>{const nom=$('rNomC').value.trim(),tel=$('rTel').value.trim();const m=$('rMsg');
+  if(!nom||telWa(tel).length<11){m.className='msg bad';m.textContent=!nom?'Escribe tu nombre.':'Escribe tu WhatsApp con el 9 adelante, por ejemplo +56 9 1234 5678.';m.hidden=false;return}
+  const s=svcOf(R.svc);
+  if(!libres(R.fecha,s.d).map(toHM).includes(R.hora)){m.className='msg bad';m.textContent='Alguien acaba de tomar esa hora. Elige otra.';m.hidden=false;paintDiasCli();paso(2);return}
+  const c={id:uid(),fecha:R.fecha,hora:R.hora,svc:R.svc,sn:s.n,p:s.p,dur:s.d,nom:nom.slice(0,70),tel:tel.slice(0,25),estado:D.negocio.auto?'Confirmada':'Pendiente',origen:'link',nota:$('rNota').value.trim().slice(0,300),creada:new Date().toISOString()};
+  $('rReservar').disabled=true;
+  try{await Store.reservar(c)}catch(e){$('rReservar').disabled=false;m.className='msg bad';m.textContent=e&&e.code==='tomada'?'Alguien acaba de tomar esa hora. Elige otra.':'No se pudo reservar. Revisa tu conexión e inténtalo de nuevo.';m.hidden=false;if(e&&e.code==='tomada'){await cargarOcup();paintDiasCli();paso(2)}return}
+  $('rReservar').disabled=false;
+  $('rOkT').textContent=c.estado==='Confirmada'?'¡Tu hora quedó reservada!':'¡Solicitud enviada!';
+  $('rOkP').textContent=c.estado==='Confirmada'?'Te esperamos. Si no puedes asistir, avísanos con tiempo.':'El negocio confirmará tu hora por WhatsApp.';
+  $('rSum2').innerHTML=$('rSum').innerHTML+`<div><span>A nombre de</span><b>${esc(nom)}</b></div>`;
+  $('rWaHint').textContent=D.negocio.wa?'¿Dudas? Escribe al '+D.negocio.wa+'.':'';
+  $('rNomC').value='';$('rTel').value='';$('rNota').value='';paso(4)};
+$('rOtra').onclick=()=>resetReserva();
+
+// ================= EN LÍNEA: sesión, sincronización, admin =================
+let vista='agenda';
+function guardar(p){return Promise.resolve(p).catch(()=>{const b=$('linkBanner');b.className='banner bad';b.textContent='No se pudo guardar el último cambio. Revisa tu conexión.';b.hidden=false})}
+function paintBanner(){const b=$('linkBanner');if(!ONLINE){b.hidden=true;return}const lh=D.negocio.linkHasta||0,dias=Math.ceil((lh-Date.now())/864e5);
+  const wa=VEND_WA?`<a class="btn sm dark" href="https://wa.me/${telWa(VEND_WA)}?text=${encodeURIComponent('Hola, quiero renovar el link de reservas de '+(D.negocio.nom||'mi negocio')+' ('+D.negocio.slug+')')}" target="_blank" rel="noopener">Renovar</a>`:'';
+  if(dias<=0){b.className='banner bad';b.innerHTML='<span>Tu link de reservas está vencido: tus clientes no pueden reservar en línea. Tu agenda sigue funcionando.</span>'+wa;b.hidden=false}
+  else if(dias<=15){b.className='banner warn';b.innerHTML=`<span>Tu link de reservas vence en ${dias} día${dias===1?'':'s'}.</span>`+wa;b.hidden=false}else b.hidden=true}
+function amsg(k,t){const m=$('aMsg');m.className='msg '+k;m.textContent=t;m.hidden=!t}
+let altaModo=false;
+function modoAuth(up){altaModo=up;$('aIn').setAttribute('aria-pressed',!up);$('aUp').setAttribute('aria-pressed',up);$('aUpExtra').hidden=!up;$('aGo').textContent=up?'Crear cuenta':'Ingresar';$('aReset').hidden=up;$('aPass').autocomplete=up?'new-password':'current-password';amsg('','')}
+$('aIn').onclick=()=>modoAuth(false);$('aUp').onclick=()=>modoAuth(true);
+$('aSlug').addEventListener('input',e=>{e.target.value=e.target.value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-+/,'')});
+$('aNeg').addEventListener('input',()=>{if(!$('aSlug').dataset.t)$('aSlug').value=$('aNeg').value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)});
+$('aSlug').addEventListener('keydown',()=>$('aSlug').dataset.t='1');
+const ERR={'auth/invalid-email':'El correo no es válido.','auth/user-not-found':'No hay una cuenta con ese correo.','auth/wrong-password':'Contraseña incorrecta.','auth/invalid-credential':'Correo o contraseña incorrectos.','auth/email-already-in-use':'Ya existe una cuenta con ese correo. Ingresa con tu contraseña.','auth/weak-password':'La contraseña debe tener al menos 6 caracteres.','auth/too-many-requests':'Demasiados intentos. Espera unos minutos.','auth/network-request-failed':'Sin conexión a internet.'};
+async function crearNegocio(nom,rubro,slug){const uidN=FB.uid,email=FB.user.email;
+  await FB.db.runTransaction(async tx=>{const r=FB.db.doc('slugs/'+slug);const x=await tx.get(r);if(x.exists)throw{code:'slug'};
+    tx.set(r,{uid:uidN});
+    tx.set(negRef(uidN),{nom,rubro,slug,wa:'',dir:'',logo:'',record:'Hola {nombre} 👋 te recordamos tu hora en {negocio}: {servicio} el {fecha} a las {hora}. Si no puedes asistir, avísanos por aquí. ¡Te esperamos!',
+      ant:2,dias:21,auto:true,horario:H2M(HORARIO_BASE),bloqueos:[],servicios:(SVC_BASE[rubro]||SVC_BASE['Otro']).map(([n,d,p],i)=>({id:'s'+(i+1),cat:rubro,n,d,p})),
+      linkHasta:Date.now()+15*864e5,creado:Date.now()});
+    tx.set(negRef(uidN).collection('privado').doc('info'),{email,creado:Date.now()})})}
+$('aGo').onclick=async()=>{const mail=$('aMail').value.trim(),pass=$('aPass').value;
+  const setup=!!FB.user;
+  if(!setup&&(!mail||!pass)){amsg('bad','Escribe tu correo y contraseña.');return}
+  if(altaModo){const nom=$('aNeg').value.trim(),slug=$('aSlug').value.replace(/-+$/,'');if(!nom){amsg('bad','Escribe el nombre de tu negocio.');return}if(slug.length<3){amsg('bad','El nombre del link debe tener al menos 3 letras.');return}}
+  $('aGo').disabled=true;amsg('','');
+  try{
+    if(altaModo){if(!FB.user){const cr=await FB.auth.createUserWithEmailAndPassword(mail,pass);FB.user=cr.user;FB.uid=cr.user.uid}
+      await crearNegocio($('aNeg').value.trim(),$('aRubro').value,$('aSlug').value.replace(/-+$/,''));await entrar(FB.user)}
+    else await FB.auth.signInWithEmailAndPassword(mail,pass);
+  }catch(e){amsg('bad',e&&e.code==='slug'?'Ese nombre de link ya existe. Prueba con otro.':(ERR[e&&e.code]||'No se pudo completar. Inténtalo de nuevo.'))}
+  finally{$('aGo').disabled=false}};
+$('aReset').onclick=async()=>{const mail=$('aMail').value.trim();if(!mail){amsg('bad','Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña".');return}
+  try{await FB.auth.sendPasswordResetEmail(mail);amsg('ok','Te enviamos un correo para crear una nueva contraseña.')}catch(e){amsg('bad',ERR[e&&e.code]||'No se pudo enviar el correo.')}};
+$('salir').onclick=async()=>{FB.unsub.forEach(f=>f());await FB.auth.signOut();location.reload()};
+function pantalla(p){$('auth').hidden=p!=='auth';$('pro').hidden=p!=='pro';$('cli').hidden=p!=='cli';$('tabs').hidden=p!=='pro';$('loadBar').hidden=p!=='load';document.body.style.paddingBottom=p==='pro'?'':'24px'}
+let entrando=false;
+async function entrar(user){if(entrando)return;FB.user=user;FB.uid=user.uid;
+  const snap=await negRef(user.uid).get();
+  if(!snap.exists){pantalla('auth');modoAuth(true);$('aMail').value=user.email;$('aMail').disabled=true;$('aPass').closest('.f').hidden=true;$('aIn').hidden=true;amsg('ok','Completa los datos de tu negocio para terminar.');return}
+  entrando=true;
+  $('tabAdmin').hidden=!(ADMIN&&String(user.email||'').toLowerCase()===ADMIN);
+  const apply=x=>{const id=D.negocio&&D.negocio._uid;D.negocio=fromDoc(x);D.servicios=(x.servicios||[]).map(s=>({...s}));paintTop();if(vista==='agenda'){paintAgenda();paintBanner()}};
+  apply(snap.data());D.citas=[];pantalla('pro');show('agenda');
+  FB.unsub.push(negRef(user.uid).onSnapshot(s=>{if(s.exists&&!s.metadata.hasPendingWrites)apply(s.data())}));
+  FB.unsub.push(negRef(user.uid).collection('citas').onSnapshot(s=>{D.citas=s.docs.map(d=>({id:d.id,...d.data()}));
+    if(vista==='agenda')paintAgenda();if(vista==='clientes')paintClientes()},()=>{}));
+}
+// ---- admin ----
+let ADM=[];
+async function paintAdmin(force){if(!ONLINE)return;const m=$('admMsg');
+  if(!ADM.length||force){m.hidden=true;try{const q=await FB.db.collection('negocios').get();
+      ADM=await Promise.all(q.docs.map(async d=>{let email='';try{const p=await d.ref.collection('privado').doc('info').get();email=p.exists?p.data().email:''}catch(e){}return{id:d.id,...d.data(),email}}));
+    }catch(e){m.className='msg bad';m.textContent='No se pudo cargar la lista. Revisa que tu correo sea el de administrador en las reglas.';m.hidden=false;return}}
+  const now=Date.now(),q=$('admBus').value.trim().toLowerCase();
+  $('admN').textContent=ADM.length;$('admA').textContent=ADM.filter(x=>(x.linkHasta||0)>now).length;$('admV').textContent=ADM.filter(x=>(x.linkHasta||0)>now&&x.linkHasta-now<30*864e5).length;
+  const L=ADM.filter(x=>!q||[x.nom,x.slug,x.email].some(v=>String(v||'').toLowerCase().includes(q))).sort((a,b)=>(a.linkHasta||0)-(b.linkHasta||0));
+  $('admList').innerHTML=L.map(x=>{const act=(x.linkHasta||0)>now,dias=Math.ceil(((x.linkHasta||0)-now)/864e5);
+    return `<div class="item" data-id="${esc(x.id)}"><div><h3>${esc(x.nom||'(sin nombre)')}</h3><p>${esc(x.rubro||'')} · ${esc(x.slug||'')} · ${esc(x.email||'')}<br>Registrado ${x.creado?new Date(x.creado).toLocaleDateString('es-CL'):'—'}</p></div>
+    <span class="pill ${act?(dias<=30?'Pendiente':'Confirmada'):'Cancelada'}">${act?'Activo · '+dias+' días':'Vencido'}</span>
+    <div class="acts"><button class="btn sm pri" data-ad="365" type="button">+1 año</button><button class="btn sm ghost" data-ad="30" type="button">+1 mes</button><button class="btn sm ghost" data-ad="15" type="button">+15 días</button><button class="btn sm bad" data-ad="0" type="button">Desactivar</button>
+    ${act?`<span class="hint">Hasta ${new Date(x.linkHasta).toLocaleDateString('es-CL')}</span>`:''}</div></div>`}).join('')||'<div class="empty">No hay negocios que coincidan.</div>'}
+$('admBus').addEventListener('input',()=>paintAdmin());$('admRef').onclick=()=>paintAdmin(true);
+$('admList').addEventListener('click',async e=>{const b=e.target.closest('[data-ad]');if(!b)return;const id=b.closest('.item').dataset.id,x=ADM.find(y=>y.id===id);const d=+b.dataset.ad;
+  const nuevo=d===0?Date.now()-1000:Math.max(Date.now(),x.linkHasta||0)+d*864e5;b.disabled=true;
+  try{await negRef(id).update({linkHasta:nuevo});x.linkHasta=nuevo;paintAdmin();const m=$('admMsg');m.className='msg ok';m.textContent=(x.nom||'Negocio')+': '+(d?'link activo hasta el '+new Date(nuevo).toLocaleDateString('es-CL'):'link desactivado')+'.';m.hidden=false}
+  catch(err){const m=$('admMsg');m.className='msg bad';m.textContent='No se pudo actualizar. Revisa las reglas de administrador.';m.hidden=false;b.disabled=false}});
+// ---- cliente en línea ----
+async function cargarOcup(){const hoy=ymd(new Date());const q=await negRef(D.negocio._uid).collection('ocupado').where('f','>=',hoy).get();OCUP={};q.docs.forEach(d=>{OCUP[d.id]=(d.data().b||[]).map(x=>[x.i,x.f])})}
+async function iniciarCliente(){pantalla('load');
+  try{const s=await FB.db.doc('slugs/'+PARAM_N).get();if(!s.exists)throw{code:'nf'};const id=s.data().uid;const n=await negRef(id).get();if(!n.exists)throw{code:'nf'};
+    const x=n.data();D.negocio=fromDoc(x);D.negocio._uid=id;D.servicios=x.servicios||[];D.citas=[];await cargarOcup();
+    document.title='Reservar · '+D.negocio.nom;pantalla('cli');resetReserva()}
+  catch(e){pantalla('cli');[1,2,3,4].forEach(i=>$('r'+i).hidden=true);$('r0').hidden=false;$('r0t').textContent=e&&e.code==='nf'?'No encontramos este link de reservas. Revisa que esté bien escrito.':'No se pudo cargar. Revisa tu conexión e inténtalo de nuevo.';$('rNom').textContent='Reservas'}}
+// ================= INICIO =================
+if(!ONLINE){$('auth').hidden=true;paintTop();show('agenda')}
+else{
+  $('demoBar').hidden=true;document.querySelector('.modo').hidden=true;pantalla('load');
+  initFirebase().then(()=>{
+    if(CLIENTE_ONLINE){iniciarCliente();return}
+    FB.auth.onAuthStateChanged(u=>{if(u)entrar(u).catch(()=>{pantalla('auth');amsg('bad','No se pudo cargar tu agenda. Revisa tu conexión.')});else{pantalla('auth');modoAuth(false)}});
+  }).catch(()=>{pantalla('auth');amsg('bad','Sin conexión a internet. Conéctate y vuelve a abrir la app.')});
+}
+})();
+</script>
+
+</body>
+</html>
