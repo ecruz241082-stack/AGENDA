@@ -97,6 +97,11 @@ textarea{min-height:64px;resize:vertical}
 .pill{font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
 .pill.Confirmada{background:var(--okbg);color:var(--ok)}.pill.Pendiente{background:var(--warnbg);color:var(--warn)}.pill.Completada{background:var(--infobg);color:var(--info)}.pill.Cancelada{background:var(--badbg);color:var(--bad)}
 .pill.web{background:var(--soft);color:var(--accent)}
+.pill.pro{background:var(--infobg);color:var(--info)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-weight:600;font-size:.85rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--ink-fg);border-color:var(--ink)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .libre{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;align-items:center}
 .libre span{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .libre button{border:1px dashed var(--line);background:none;border-radius:10px;padding:8px;text-align:left;color:var(--muted);cursor:pointer;font-size:.85rem}
@@ -190,6 +195,8 @@ textarea{min-height:64px;resize:vertical}
       <h2><span id="agTitulo">Hoy</span><span class="row"><button class="btn sm ghost" id="agHoy" type="button">Hoy</button><button class="btn sm pri" id="agNueva" type="button">+ Cita</button></span></h2>
       <div class="strip" id="strip" role="group" aria-label="Días"></div>
       <div class="kpis"><div class="kpi"><span>Citas</span><b id="kN">0</b></div><div class="kpi"><span>Por cobrar</span><b id="kM">$0</b></div><div class="kpi"><span>Horas libres</span><b id="kL">0</b></div></div>
+      <div class="chips" id="proChips" role="group" aria-label="Profesional" hidden></div>
+      <p class="hint" id="proRes" hidden></p>
     </div>
     <div class="panel"><div class="timeline" id="timeline"></div></div>
   </section>
@@ -202,6 +209,7 @@ textarea{min-height:64px;resize:vertical}
         <div class="f"><label for="ciNom">Cliente</label><input id="ciNom" list="dlCli" autocomplete="off" placeholder="Nombre"></div>
         <div class="f"><label for="ciTel">WhatsApp</label><input id="ciTel" inputmode="tel" placeholder="+56 9 1234 5678"></div>
         <datalist id="dlCli"></datalist>
+        <div class="f full" id="ciProF" hidden><label for="ciPro">Profesional</label><select id="ciPro"></select></div>
         <div class="f full"><label for="ciSvc">Servicio</label><select id="ciSvc"></select></div>
         <div class="f"><label for="ciFecha">Fecha</label><input id="ciFecha" type="date"></div>
         <div class="f"><label for="ciEstado">Estado</label><select id="ciEstado"><option>Confirmada</option><option>Pendiente</option><option>Completada</option><option>Cancelada</option></select></div>
@@ -250,17 +258,25 @@ textarea{min-height:64px;resize:vertical}
       <p class="msg" id="nMsg" hidden></p>
     </div>
     <div class="panel">
+      <h2>Equipo <button class="btn sm ghost" id="eqAdd" type="button">+ Profesional</button></h2>
+      <p class="hint" id="eqHint"></p>
+      <div class="list" id="eqList"></div>
+      <p class="msg" id="eqMsg" hidden></p>
+    </div>
+    <div class="panel">
       <h2>Servicios <button class="btn sm ghost" id="sAdd" type="button">+ Servicio</button></h2>
       <div class="list" id="svcList"></div>
     </div>
     <div class="panel">
       <h2>Horario de atención</h2>
+      <div class="f" id="horProF" hidden><label for="horPro">Horario de</label><select id="horPro"></select></div>
+      <label class="chk" id="horPropioL" hidden><input type="checkbox" id="horPropio"> Tiene horario propio (si no, usa el horario del local)</label>
       <div class="hor"><span class="h">Día</span><span class="h">Abre</span><span class="h">Cierra</span><span class="h">Colación desde</span><span class="h">hasta</span></div>
       <div id="horList" style="display:grid;gap:6px"></div>
       <div class="row"><button class="btn pri" id="hGuardar" type="button">Guardar horario</button></div>
       <h2 style="margin-top:6px">Días bloqueados</h2>
       <p class="hint">Vacaciones, feriados o turnos fuera. Esos días no se pueden reservar.</p>
-      <div class="row"><input id="bFecha" type="date" style="width:auto;flex:1" aria-label="Fecha a bloquear"><input id="bMotivo" placeholder="Motivo" style="width:auto;flex:2" aria-label="Motivo"><button class="btn sm dark" id="bAdd" type="button">Bloquear</button></div>
+      <div class="row"><input id="bFecha" type="date" style="width:auto;flex:1" aria-label="Fecha a bloquear"><input id="bMotivo" placeholder="Motivo" style="width:auto;flex:2" aria-label="Motivo"><select id="bPro" style="width:auto;flex:1" aria-label="Quién" hidden></select><button class="btn sm dark" id="bAdd" type="button">Bloquear</button></div>
       <div class="list" id="bList"></div>
       <p class="msg" id="hMsg" hidden></p>
     </div>
@@ -294,6 +310,10 @@ textarea{min-height:64px;resize:vertical}
   <section class="panel" id="r1">
     <h2>1. Elige tu servicio</h2>
     <div class="list" id="rSvcs"></div>
+  </section>
+  <section class="panel" id="rP" hidden>
+    <h2>Elige profesional <button class="btn sm ghost" id="rPVolver" type="button">Volver</button></h2>
+    <div class="list" id="rPros"></div>
   </section>
   <section class="panel" id="r2" hidden>
     <h2>2. Elige día y hora <button class="btn sm ghost" id="r2Volver" type="button">Volver</button></h2>
@@ -348,7 +368,7 @@ const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).joi
 
 // ================= DATOS =================
 // Capa de datos intercambiable: ahora en modo demostración (este equipo). En la etapa 2 se conecta a internet.
-const DEMO_KEY='agenda_demo_v1';
+const DEMO_KEY='agenda_demo_v2';
 function semilla(){
   const hoy=new Date();const d0=ymd(hoy);const d1=ymd(new Date(hoy.getTime()+864e5));const dm1=ymd(new Date(hoy.getTime()-864e5));
   const S=[
@@ -359,23 +379,30 @@ function semilla(){
     {id:'s5',cat:'Color',n:'Platinado / decoloración',d:120,p:45000},
     {id:'s6',cat:'Uñas',n:'Manicure tradicional',d:45,p:12000},
     {id:'s7',cat:'Uñas',n:'Uñas acrílicas',d:90,p:25000}];
-  const C=(dia,h,svc,nom,tel,est,web)=>({id:uid(),fecha:dia,hora:h,svc,nom,tel,estado:est,origen:web?'link':'agenda',nota:'',creada:new Date().toISOString()});
+  const C=(dia,h,svc,nom,tel,est,web,pro)=>({id:uid(),fecha:dia,hora:h,svc,nom,tel,estado:est,origen:web?'link':'agenda',nota:'',pro:pro||'p1',creada:new Date().toISOString()});
   return{
     negocio:{nom:'Barbería Ejemplo',rubro:'Barbería',wa:'+56 9 1234 5678',dir:'Av. Francisco de Aguirre 123, La Serena',slug:'barberia-ejemplo',logo:'',
       record:'Hola {nombre} 👋 te recordamos tu hora en {negocio}: {servicio} el {fecha} a las {hora}. Si no puedes asistir, avísanos por aquí. ¡Te esperamos!',
       ant:2,dias:21,auto:true,
       horario:[null,['10:00','20:00','14:00','15:00'],['10:00','20:00','14:00','15:00'],['10:00','20:00','14:00','15:00'],['10:00','20:00','14:00','15:00'],['10:00','21:00','14:00','15:00'],['10:00','17:00','','']],
-      bloqueos:[]},
+      bloqueos:[],maxPro:5,
+      equipo:[{id:'p1',n:'Enzo',h:null,s:['s1','s2','s3','s4']},{id:'p2',n:'Pedro',h:[null,null,['13:00','21:00','',''],['13:00','21:00','',''],['13:00','21:00','',''],['13:00','21:00','',''],['10:00','17:00','','']],s:['s1','s2','s3','s4']},{id:'p3',n:'Camila',h:null,s:['s5','s6','s7']}]},
     servicios:S,
     citas:[C(dm1,'11:00','s2','Matías Rojas','+56 9 8765 4321','Completada'),C(dm1,'17:00','s1','Felipe Araya','+56 9 5555 1212','Completada'),
-      C(d0,'10:30','s1','Matías Rojas','+56 9 8765 4321','Confirmada'),C(d0,'11:15','s2','Joaquín Pérez','+56 9 4444 3322','Confirmada',true),
-      C(d0,'15:00','s6','Camila Torres','+56 9 7777 8899','Pendiente',true),C(d0,'16:30','s3','Diego Muñoz','+56 9 2222 1111','Confirmada'),
-      C(d0,'18:00','s5','Valentina Soto','+56 9 3333 6666','Confirmada',true),C(d1,'12:00','s4','Tomás Rojas','+56 9 8765 4321','Confirmada'),C(d1,'19:00','s2','Felipe Araya','+56 9 5555 1212','Pendiente',true)]
+      C(d0,'10:30','s1','Matías Rojas','+56 9 8765 4321','Confirmada'),C(d0,'11:15','s2','Joaquín Pérez','+56 9 4444 3322','Confirmada',true),C(d0,'13:00','s1','Ignacio Vera','+56 9 6666 1010','Confirmada',false,'p2'),C(d0,'17:00','s2','Benjamín Lagos','+56 9 1212 3434','Confirmada',true,'p2'),
+      C(d0,'15:00','s6','Camila Torres','+56 9 7777 8899','Pendiente',true,'p3'),C(d0,'16:30','s3','Diego Muñoz','+56 9 2222 1111','Confirmada'),
+      C(d0,'18:00','s5','Valentina Soto','+56 9 3333 6666','Confirmada',true,'p3'),C(d1,'12:00','s4','Tomás Rojas','+56 9 8765 4321','Confirmada'),C(d1,'19:00','s2','Felipe Araya','+56 9 5555 1212','Pendiente',true)]
   };
 }
 let D=ls.get(DEMO_KEY,null);if(!D||!D.negocio)D=semilla();
 const save=()=>ls.set(DEMO_KEY,D);
 const svcOf=id=>D.servicios.find(s=>s.id===id);
+const EQ=()=>(D.negocio.equipo&&D.negocio.equipo.length)?D.negocio.equipo:(D.negocio.equipo=[{id:'p1',n:'Profesional 1',h:null,s:null}]);
+const proOf=id=>EQ().find(p=>p.id===id)||EQ()[0];
+const proIdC=c=>(c.pro&&EQ().some(p=>p.id===c.pro))?c.pro:EQ()[0].id;
+const multi=()=>EQ().length>1;
+const horDe=p=>(p&&p.h)?p.h:D.negocio.horario;
+const proHace=(p,sid)=>!p.s||!p.s.length||p.s.includes(sid);
 const infoC=c=>{const s=svcOf(c.svc);return{n:c.sn||(s?s.n:'Servicio'),p:c.p!=null?c.p:(s?s.p:0),d:c.dur||(s?s.d:30)}};
 // ---- modo: demostración (sin config) o en línea (Firebase) ----
 const CFG=(window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey&&!/PEGA/.test(window.FIREBASE_CONFIG.apiKey))?window.FIREBASE_CONFIG:null, ONLINE=!!CFG;
@@ -390,7 +417,9 @@ const HORARIO_BASE=[null,['10:00','19:00','14:00','15:00'],['10:00','19:00','14:
 const SVC_BASE={'Barbería':[['Corte de pelo',30,10000],['Corte + barba',45,15000],['Perfilado de barba',20,6000]],'Peluquería':[['Corte',45,15000],['Brushing',45,15000],['Color raíz',90,35000]],
  'Manicure y uñas':[['Manicure tradicional',45,12000],['Esmaltado permanente',60,15000],['Uñas acrílicas',90,25000]],'Pestañas y cejas':[['Lifting de pestañas',60,20000],['Diseño de cejas',30,10000]],
  'Estética y spa':[['Limpieza facial',60,25000],['Masaje relajante',60,25000]],'Maquillaje':[['Maquillaje social',60,30000]],'Salón de belleza':[['Corte',45,15000],['Manicure',45,12000]],'Otro':[['Servicio',60,15000]]};
-function fromDoc(x){return{nom:x.nom||'',rubro:x.rubro||'Otro',wa:x.wa||'',dir:x.dir||'',slug:x.slug||'',logo:x.logo||'',record:x.record||'',ant:x.ant??2,dias:x.dias??21,auto:x.auto!==false,horario:M2H(x.horario),bloqueos:x.bloqueos||[],linkHasta:x.linkHasta||0}}
+function fromDoc(x){return{maxPro:x.maxPro||1,equipo:(x.equipo||[]).map(p=>({id:p.id,n:p.n||'',h:p.h?M2H(p.h):null,s:p.s||null})),nom:x.nom||'',rubro:x.rubro||'Otro',wa:x.wa||'',dir:x.dir||'',slug:x.slug||'',logo:x.logo||'',record:x.record||'',ant:x.ant??2,dias:x.dias??21,auto:x.auto!==false,horario:M2H(x.horario),bloqueos:x.bloqueos||[],linkHasta:x.linkHasta||0}}
+const maxPro=()=>ONLINE?(D.negocio.maxPro||1):5;
+const prosPara=sid=>EQ().slice(0,maxPro()).filter(p=>!sid||proHace(p,sid));
 const linkActivo=()=>!ONLINE||(D.negocio.linkHasta||0)>Date.now();
 function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
 async function initFirebase(){const v='10.12.2',b='https://www.gstatic.com/firebasejs/'+v+'/';
@@ -400,8 +429,8 @@ const negRef=uid=>FB.db.doc('negocios/'+uid);
 // ---- operaciones de guardado (iguales para demo y en línea) ----
 const Store={
   async saveNegocio(){if(!ONLINE){save();return}const n=D.negocio;
-    await negRef(FB.uid).update({nom:n.nom,rubro:n.rubro,wa:n.wa,dir:n.dir,logo:n.logo||'',record:n.record,ant:n.ant,dias:n.dias,auto:!!n.auto,horario:H2M(n.horario),bloqueos:n.bloqueos||[],servicios:D.servicios})},
-  async recompute(f){if(!ONLINE)return;const b=D.citas.filter(c=>c.fecha===f&&c.estado!=='Cancelada').map(c=>{const i=toMin(c.hora);return{i,f:i+infoC(c).d}});
+    await negRef(FB.uid).update({nom:n.nom,rubro:n.rubro,wa:n.wa,dir:n.dir,logo:n.logo||'',record:n.record,ant:n.ant,dias:n.dias,auto:!!n.auto,horario:H2M(n.horario),bloqueos:n.bloqueos||[],servicios:D.servicios,equipo:EQ().map(p=>({id:p.id,n:p.n||'',h:p.h?H2M(p.h):null,s:(p.s&&p.s.length)?p.s:null}))})},
+  async recompute(f){if(!ONLINE)return;const b=D.citas.filter(c=>c.fecha===f&&c.estado!=='Cancelada').map(c=>{const i=toMin(c.hora);return{i,f:i+infoC(c).d,p:proIdC(c)}});
     await negRef(FB.uid).collection('ocupado').doc(f).set({f,b})},
   async saveCita(c,prevFecha){const s=svcOf(c.svc);if(s){c.sn=s.n;c.p=s.p;c.dur=s.d}
     if(!ONLINE){save();return}const {id,...data}=c;await negRef(FB.uid).collection('citas').doc(id).set(JSON.parse(JSON.stringify(data)));
@@ -411,32 +440,36 @@ const Store={
     await FB.db.runTransaction(async tx=>{const r=FB.db.doc('slugs/'+nuevo);const x=await tx.get(r);if(x.exists)throw{code:'slug'};tx.set(r,{uid:FB.uid});if(viejo)tx.delete(FB.db.doc('slugs/'+viejo));tx.update(negRef(FB.uid),{slug:nuevo})})},
   async reservar(c){if(!ONLINE){D.citas.push(c);save();return}const uidN=D.negocio._uid;const ocRef=negRef(uidN).collection('ocupado').doc(c.fecha);const cr=negRef(uidN).collection('citas').doc();
     const ini=toMin(c.hora),fin=ini+c.dur;
-    await FB.db.runTransaction(async tx=>{const s=await tx.get(ocRef);const b=s.exists?(s.data().b||[]):[];if(b.some(x=>ini<x.f&&fin>x.i))throw{code:'tomada'};
-      const {id,...data}=c;tx.set(cr,data);tx.set(ocRef,{f:c.fecha,b:b.concat({i:ini,f:fin})})});
-    (OCUP[c.fecha]=OCUP[c.fecha]||[]).push([ini,fin])}
+    await FB.db.runTransaction(async tx=>{const s=await tx.get(ocRef);const b=s.exists?(s.data().b||[]):[];const p0=EQ()[0].id;if(b.some(x=>(x.p||p0)===c.pro&&ini<x.f&&fin>x.i))throw{code:'tomada'};
+      const {id,...data}=c;tx.set(cr,data);tx.set(ocRef,{f:c.fecha,b:b.concat({i:ini,f:fin,p:c.pro})})});
+    (OCUP[c.fecha]=OCUP[c.fecha]||[]).push([ini,fin,c.pro])}
 };
 
 // ================= DISPONIBILIDAD =================
 const PASO=15;
-function libres(fecha,dur,ignorarId){
-  const n=D.negocio,d=new Date(fecha+'T12:00'),h=n.horario[d.getDay()];
-  if(!h||!h[0]||!h[1])return[];if((n.bloqueos||[]).some(b=>b.fecha===fecha))return[];
+function libres(fecha,dur,ignorarId,proId){
+  const p=proOf(proId),n=D.negocio,d=new Date(fecha+'T12:00'),h=horDe(p)[d.getDay()];
+  if(!h||!h[0]||!h[1])return[];if((n.bloqueos||[]).some(b=>b.fecha===fecha&&(!b.pro||b.pro===p.id)))return[];
   const ab=toMin(h[0]),ci=toMin(h[1]),c1=toMin(h[2]),c2=toMin(h[3]);
-  const ocup=CLIENTE_ONLINE?(OCUP[fecha]||[]).map(x=>x.slice()):D.citas.filter(c=>c.fecha===fecha&&c.estado!=='Cancelada'&&c.id!==ignorarId).map(c=>{const i=toMin(c.hora);return[i,i+infoC(c).d]});
+  const p0=EQ()[0].id;const ocup=CLIENTE_ONLINE?(OCUP[fecha]||[]).filter(x=>(x[2]||p0)===p.id).map(x=>[x[0],x[1]]):D.citas.filter(c=>c.fecha===fecha&&c.estado!=='Cancelada'&&c.id!==ignorarId&&proIdC(c)===p.id).map(c=>{const i=toMin(c.hora);return[i,i+infoC(c).d]});
   if(c1!=null&&c2!=null)ocup.push([c1,c2]);
   const ahora=new Date(),hoy=ymd(ahora)===fecha,minHoy=ahora.getHours()*60+ahora.getMinutes();
   const out=[];for(let t=ab;t+dur<=ci;t+=PASO){if(hoy&&t<minHoy)continue;if(ocup.some(([a,b])=>t<b&&t+dur>a))continue;out.push(t)}
   return out;
 }
+function cargaDe(fecha,pid){const p0=EQ()[0].id;return CLIENTE_ONLINE?(OCUP[fecha]||[]).filter(x=>(x[2]||p0)===pid).length:D.citas.filter(c=>c.fecha===fecha&&c.estado!=='Cancelada'&&proIdC(c)===pid).length}
+function libresAny(fecha,dur,sid,pros){const S=new Set();(pros||prosPara(sid)).forEach(p=>libres(fecha,dur,null,p.id).forEach(t=>S.add(t)));return[...S].sort((a,b)=>a-b)}
+function proLibreEn(fecha,t,dur,sid,pros){return (pros||prosPara(sid)).filter(p=>libres(fecha,dur,null,p.id).includes(t)).sort((a,b)=>cargaDe(fecha,a.id)-cargaDe(fecha,b.id))[0]}
 
 // ================= ENCABEZADO =================
 function paintTop(){const n=D.negocio;$('tNom').textContent=n.nom||'Mi negocio';$('tRubro').textContent=(n.rubro||'')+' · Agenda Pro Belleza';
   [$('tLogo'),$('rLogo')].forEach(el=>{el.innerHTML=n.logo?`<img src="${n.logo}" alt="">`:esc(initials(n.nom))})}
 
 // ================= AGENDA =================
-let dia=ymd(new Date());
+let dia=ymd(new Date()),proF='';
+const prosVista=()=>proF?[proOf(proF)]:EQ();
 function paintStrip(){const s=$('strip');const base=new Date();base.setDate(base.getDate()-3);let h='';
-  for(let i=0;i<21;i++){const d=new Date(base);d.setDate(base.getDate()+i);const f=ymd(d);const n=D.citas.filter(c=>c.fecha===f&&c.estado!=='Cancelada').length;const off=!D.negocio.horario[d.getDay()]||(D.negocio.bloqueos||[]).some(b=>b.fecha===f);
+  for(let i=0;i<21;i++){const d=new Date(base);d.setDate(base.getDate()+i);const f=ymd(d);const n=D.citas.filter(c=>c.fecha===f&&c.estado!=='Cancelada'&&(!proF||proIdC(c)===proF)).length;const off=!prosVista().some(p=>horDe(p)[d.getDay()])||(D.negocio.bloqueos||[]).some(b=>b.fecha===f&&(!b.pro||b.pro===proF));
     h+=`<button type="button" class="day${off?' off':''}" data-f="${f}" aria-pressed="${f===dia}"><small>${DC[d.getDay()]}</small><b>${d.getDate()}</b>${n?'<i></i>':''}</button>`}
   s.innerHTML=h;const sel=s.querySelector('[aria-pressed="true"]');if(sel)sel.scrollIntoView({block:'nearest',inline:'center'})}
 $('strip').addEventListener('click',e=>{const b=e.target.closest('.day');if(!b)return;dia=b.dataset.f;paintAgenda()});
@@ -444,21 +477,22 @@ $('agHoy').onclick=()=>{dia=ymd(new Date());paintAgenda()};
 $('agNueva').onclick=()=>abrirCita(null,dia);
 function paintAgenda(){
   const hoy=ymd(new Date());$('agTitulo').textContent=dia===hoy?'Hoy · '+fechaLarga(dia).split(' ').slice(1).join(' '):fechaLarga(dia);
-  paintStrip();
-  const cs=D.citas.filter(c=>c.fecha===dia).sort((a,b)=>a.hora.localeCompare(b.hora));
+  paintStrip();paintChips();
+  const cs=D.citas.filter(c=>c.fecha===dia&&(!proF||proIdC(c)===proF)).sort((a,b)=>a.hora.localeCompare(b.hora));
   const act=cs.filter(c=>c.estado!=='Cancelada');
   $('kN').textContent=act.length;$('kM').textContent=clp(act.filter(c=>c.estado!=='Completada').reduce((a,c)=>a+(infoC(c).p||0),0));
-  const lib=libres(dia,30);$('kL').textContent=lib.length?Math.round(lib.length*PASO/60*10)/10:0;
-  const d=new Date(dia+'T12:00'),h=D.negocio.horario[d.getDay()],bl=(D.negocio.bloqueos||[]).find(b=>b.fecha===dia);
+  const PV=prosVista(),lib=libresAny(dia,30,null,PV);const nl=PV.reduce((a,p)=>a+libres(dia,30,null,p.id).length,0);$('kL').textContent=nl?Math.round(nl*PASO/60*10)/10:0;
+  const pr=$('proRes');if(multi()&&!proF){pr.innerHTML=EQ().map(p=>{const a=act.filter(c=>proIdC(c)===p.id);return `<b>${esc(p.n)}</b>: ${a.length} cita${a.length===1?'':'s'} · ${clp(a.reduce((x,c)=>x+(infoC(c).p||0),0))}`}).join(' &nbsp;|&nbsp; ');pr.hidden=false}else pr.hidden=true;
+  const d=new Date(dia+'T12:00'),h=PV.some(p=>horDe(p)[d.getDay()]),bl=(D.negocio.bloqueos||[]).find(b=>b.fecha===dia&&(!b.pro||(proF&&b.pro===proF)));
   if(!cs.length){$('timeline').innerHTML=`<div class="empty">${bl?'Día bloqueado: '+esc(bl.motivo||'sin atención'):!h?'No atiendes este día.':'Sin citas este día.'}${h&&!bl?'<br><br><button class="btn pri" type="button" data-new="'+(lib[0]!=null?toHM(lib[0]):'')+'">Agendar una cita</button>':''}</div>`;return}
   const items=cs.map(c=>({t:toMin(c.hora),c}));
-  lib.filter(t=>t%60===0).forEach(t=>{if(!cs.some(c=>{const s=infoC(c),i=toMin(c.hora);return t>=i&&t<i+s.d}))items.push({t,libre:true})});
+  lib.filter(t=>t%60===0).forEach(t=>{if((multi()&&!proF)||!cs.some(c=>{const s=infoC(c),i=toMin(c.hora);return t>=i&&t<i+s.d}))items.push({t,libre:true})});
   items.sort((x,y)=>x.t-y.t||(x.libre?1:-1));
   let out='';
   items.forEach(it=>{if(it.libre){out+=`<div class="libre"><span>${toHM(it.t)}</span><button type="button" data-new="${toHM(it.t)}">Libre · agendar</button></div>`;return}
     const c=it.c,s=infoC(c);
     out+=`<div class="cita"><div class="hr">${esc(c.hora)}<small>${s?s.d+' min':''}</small></div>
-    <div class="card ${esc(c.estado)}"><div class="t"><h3>${esc(c.nom)}</h3><span class="row" style="gap:4px">${c.origen==='link'?'<span class="pill web">Por link</span>':''}<span class="pill ${esc(c.estado)}">${esc(c.estado)}</span></span></div>
+    <div class="card ${esc(c.estado)}"><div class="t"><h3>${esc(c.nom)}</h3><span class="row" style="gap:4px">${multi()?'<span class="pill pro">'+esc(proOf(proIdC(c)).n)+'</span>':''}${c.origen==='link'?'<span class="pill web">Por link</span>':''}<span class="pill ${esc(c.estado)}">${esc(c.estado)}</span></span></div>
       <p>${esc(s?s.n:'Servicio')} · ${clp(s?.p)}${c.nota?' · '+esc(c.nota):''}</p>
       <div class="row">${c.estado==='Pendiente'?`<button class="btn sm pri" data-a="conf" data-id="${c.id}" type="button">Confirmar</button>`:''}
       ${c.tel&&c.estado!=='Cancelada'&&c.estado!=='Completada'?`<button class="btn sm wa" data-a="wa" data-id="${c.id}" type="button">Recordar por WhatsApp</button>`:''}
@@ -466,28 +500,33 @@ function paintAgenda(){
       <button class="btn sm ghost" data-a="edit" data-id="${c.id}" type="button">Editar</button></div></div></div>`});
   $('timeline').innerHTML=out;
 }
-$('timeline').addEventListener('click',e=>{const nb=e.target.closest('[data-new]');if(nb){abrirCita(null,dia,nb.dataset.new);return}
+function paintChips(){const el=$('proChips');if(!multi()){el.hidden=true;proF='';return}if(proF&&!EQ().some(p=>p.id===proF))proF='';el.hidden=false;
+  el.innerHTML=`<button type="button" class="chip" data-p="" aria-pressed="${!proF}">Todos</button>`+EQ().map(p=>`<button type="button" class="chip" data-p="${p.id}" aria-pressed="${proF===p.id}">${esc(p.n||'Sin nombre')}</button>`).join('')}
+$('proChips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;proF=b.dataset.p;paintAgenda()});
+$('timeline').addEventListener('click',e=>{const nb=e.target.closest('[data-new]');if(nb){const t=nb.dataset.new;const pl=proF||(t?(proLibreEn(dia,toMin(t),30,null,EQ())||{}).id:'');abrirCita(null,dia,t,pl);return}
   const b=e.target.closest('[data-a]');if(!b)return;const c=D.citas.find(x=>x.id===b.dataset.id);if(!c)return;
   if(b.dataset.a==='conf'){c.estado='Confirmada';paintAgenda();guardar(Store.saveCita(c))}
   if(b.dataset.a==='hecha'){c.estado='Completada';paintAgenda();guardar(Store.saveCita(c))}
   if(b.dataset.a==='edit')abrirCita(c);
-  if(b.dataset.a==='wa'){const s=infoC(c);const t=(D.negocio.record||'').replace(/{nombre}/g,c.nom.split(' ')[0]).replace(/{servicio}/g,s?s.n:'').replace(/{fecha}/g,fechaLarga(c.fecha)).replace(/{hora}/g,c.hora).replace(/{negocio}/g,D.negocio.nom);
+  if(b.dataset.a==='wa'){const s=infoC(c);const t=(D.negocio.record||'').replace(/{nombre}/g,c.nom.split(' ')[0]).replace(/{servicio}/g,s?s.n:'').replace(/{fecha}/g,fechaLarga(c.fecha)).replace(/{hora}/g,c.hora).replace(/{negocio}/g,D.negocio.nom).replace(/{profesional}/g,proOf(proIdC(c)).n);
     const a=document.createElement('a');a.href='https://wa.me/'+telWa(c.tel)+'?text='+encodeURIComponent(t);a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
 });
 
 // ================= CITA =================
 let ed=null,horaSel=null;
-function fillSvcSelect(){$('ciSvc').innerHTML=D.servicios.map(s=>`<option value="${s.id}">${esc(s.n)} · ${s.d} min · ${clp(s.p)}</option>`).join('')}
-function abrirCita(c,fecha,hora){ed=c;show('cita');fillSvcSelect();
+function fillSvcSelect(){const p=proOf($('ciPro').value),cur=$('ciSvc').value;$('ciSvc').innerHTML=D.servicios.filter(s=>proHace(p,s.id)||(ed&&ed.svc===s.id)).map(s=>`<option value="${s.id}">${esc(s.n)} · ${s.d} min · ${clp(s.p)}</option>`).join('');if(cur&&[...$('ciSvc').options].some(o=>o.value===cur))$('ciSvc').value=cur}
+function abrirCita(c,fecha,hora,pid){ed=c;show('cita');
+  $('ciPro').innerHTML=EQ().map(p=>`<option value="${p.id}">${esc(p.n||'Sin nombre')}</option>`).join('');$('ciProF').hidden=!multi();$('ciPro').value=c?proIdC(c):(pid||proF||EQ()[0].id);$('ciSvc').innerHTML='';fillSvcSelect();
   $('dlCli').innerHTML=clientes().map(x=>`<option value="${esc(x.nom)}">`).join('');
   $('ciTitulo').textContent=c?'Editar cita':'Nueva cita';$('ciBorrar').hidden=!c;$('ciBorrarOk').hidden=true;$('ciMsg').hidden=true;
-  $('ciNom').value=c?c.nom:'';$('ciTel').value=c?c.tel:'';$('ciSvc').value=c?c.svc:(D.servicios[0]?.id||'');$('ciFecha').value=c?c.fecha:(fecha||dia);$('ciEstado').value=c?c.estado:'Confirmada';$('ciNota').value=c?c.nota:'';
+  $('ciNom').value=c?c.nom:'';$('ciTel').value=c?c.tel:'';if(c)$('ciSvc').value=c.svc;$('ciFecha').value=c?c.fecha:(fecha||dia);$('ciEstado').value=c?c.estado:'Confirmada';$('ciNota').value=c?c.nota:'';
   horaSel=c?c.hora:(hora||null);paintSlots();$('ciNom').focus()}
 function paintSlots(){const s=svcOf($('ciSvc').value),f=$('ciFecha').value;if(!s||!f){$('ciSlots').innerHTML='';return}
-  let L=libres(f,s.d,ed&&ed.id).map(toHM);if(horaSel&&!L.includes(horaSel))L=[horaSel,...L].sort();
+  let L=libres(f,s.d,ed&&ed.id,$('ciPro').value).map(toHM);if(horaSel&&ed&&(f!==ed.fecha||$('ciPro').value!==proIdC(ed))&&!L.includes(horaSel))horaSel=null;if(horaSel&&!L.includes(horaSel))L=[horaSel,...L].sort();
   $('ciSlots').innerHTML=L.map(h=>`<button type="button" class="slot" aria-pressed="${h===horaSel}" data-h="${h}">${h}</button>`).join('');
   $('ciSlotsHint').textContent=L.length?'':'No quedan horas libres ese día para este servicio.'}
 ['ciSvc','ciFecha'].forEach(id=>$(id).addEventListener('change',paintSlots));
+$('ciPro').addEventListener('change',()=>{fillSvcSelect();paintSlots()});
 $('ciSlots').addEventListener('click',e=>{const b=e.target.closest('.slot');if(!b)return;horaSel=b.dataset.h;paintSlots()});
 $('ciNom').addEventListener('change',()=>{const x=clientes().find(c=>c.nom.toLowerCase()===$('ciNom').value.trim().toLowerCase());if(x&&!$('ciTel').value)$('ciTel').value=x.tel});
 $('ciVolver').onclick=()=>show('agenda');
@@ -495,8 +534,8 @@ function cmsg(k,t){const m=$('ciMsg');m.className='msg '+k;m.textContent=t;m.hid
 $('ciGuardar').onclick=()=>{const nom=$('ciNom').value.trim();if(!nom){cmsg('bad','Escribe el nombre del cliente.');$('ciNom').focus();return}
   if(!horaSel){cmsg('bad','Elige una hora.');return}
   const c=ed||{id:uid(),origen:'agenda',creada:new Date().toISOString()};const prev=ed?ed.fecha:null;
-  Object.assign(c,{nom,tel:$('ciTel').value.trim(),svc:$('ciSvc').value,fecha:$('ciFecha').value,hora:horaSel,estado:$('ciEstado').value,nota:$('ciNota').value.trim()});
-  if(!ed)D.citas.push(c);dia=c.fecha;$('ciGuardar').disabled=true;Store.saveCita(c,prev).then(()=>show('agenda')).catch(()=>cmsg('bad','No se pudo guardar. Revisa tu conexión.')).finally(()=>$('ciGuardar').disabled=false)};
+  Object.assign(c,{nom,tel:$('ciTel').value.trim(),svc:$('ciSvc').value,fecha:$('ciFecha').value,hora:horaSel,estado:$('ciEstado').value,nota:$('ciNota').value.trim(),pro:$('ciPro').value});
+  if(!ed)D.citas.push(c);dia=c.fecha;if(proF&&proF!==c.pro)proF='';$('ciGuardar').disabled=true;Store.saveCita(c,prev).then(()=>show('agenda')).catch(()=>cmsg('bad','No se pudo guardar. Revisa tu conexión.')).finally(()=>$('ciGuardar').disabled=false)};
 $('ciBorrar').onclick=()=>{$('ciBorrarOk').hidden=false};
 $('ciBorrarNo').onclick=()=>{$('ciBorrarOk').hidden=true};
 $('ciBorrarSi').onclick=()=>{const c=ed;D.citas=D.citas.filter(x=>x!==c);show('agenda');guardar(Store.deleteCita(c))};
@@ -519,7 +558,7 @@ function paintAjustes(){const n=D.negocio;$('link').textContent=linkUrl();
   $('nNom').value=n.nom;$('nRubro').value=n.rubro;$('nWa').value=n.wa;$('nDir').value=n.dir;$('nSlug').value=n.slug;$('nRecord').value=n.record;$('nAnt').value=n.ant;$('nDias').value=n.dias;$('nAuto').checked=!!n.auto;
   const lh=D.negocio.linkHasta;$('linkEstado').textContent=!ONLINE?'':linkActivo()?'Link activo hasta el '+new Date(lh).toLocaleDateString('es-CL',{dateStyle:'long'})+'.':'Tu link de reservas está desactivado. Tus clientes no pueden reservar en línea.';
   $('cuenta').hidden=!ONLINE;if(ONLINE&&FB.user)$('cuentaMail').textContent='Ingresaste como '+FB.user.email;
-  paintSvcs();paintHor();paintBloq()}
+  paintEquipo();paintSvcs();paintHorSel();paintHor();paintBloq()}
 function nmsg(id,k,t){const m=$(id);m.className='msg '+k;m.textContent=t;m.hidden=!t}
 $('nSlug').addEventListener('input',e=>{e.target.value=e.target.value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-+/,'')});
 $('nGuardar').onclick=async()=>{const n=D.negocio;if(!$('nNom').value.trim()){nmsg('nMsg','bad','Escribe el nombre del negocio.');return}
@@ -532,6 +571,30 @@ $('nGuardar').onclick=async()=>{const n=D.negocio;if(!$('nNom').value.trim()){nm
 $('nLogo').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,240/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);D.negocio.logo=c.toDataURL('image/jpeg',.82);paintTop();guardar(Store.saveNegocio()).then(()=>nmsg('nMsg','ok','Logo actualizado.'))};im.src=fr.result};fr.readAsDataURL(f)});
 $('copiar').onclick=async()=>{const t=linkUrl();try{await navigator.clipboard.writeText('https://'+t);$('copiar').textContent='Copiado'}catch(e){const r=document.createRange();r.selectNodeContents($('link'));const s=getSelection();s.removeAllRanges();s.addRange(r)}setTimeout(()=>$('copiar').textContent='Copiar',1500)};
 $('verLink').onclick=()=>{if(!ONLINE){modo('cli');return}const a=document.createElement('a');a.href='https://'+linkUrl();a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()};
+// equipo
+let eqEd=null;
+function emsg(k,t){nmsg('eqMsg',k,t)}
+function paintEquipo(){const E=EQ(),mx=maxPro();
+  $('eqHint').textContent=E.length===1&&mx===1?'Trabajas solo. Si tienes más profesionales, pide ampliar tu plan para agregarlos.':`Tu plan permite ${mx} profesional${mx===1?'':'es'}.`+(E.length>mx?' Tienes más de los que permite tu plan: los clientes solo verán a los primeros '+mx+'.':'');
+  $('eqAdd').hidden=E.length>=mx;
+  $('eqList').innerHTML=E.map(p=>eqEd===p.id?`<div class="item" data-id="${p.id}"><div class="fields" style="grid-column:1/-1">
+      <div class="f full"><label>Nombre</label><input data-k="n" value="${esc(p.n)}" maxlength="40"></div>
+      <div class="f full"><label>Servicios que realiza</label><div class="row">${D.servicios.map(s=>`<label class="chk"><input type="checkbox" data-sv="${s.id}"${proHace(p,s.id)?' checked':''}> ${esc(s.n)}</label>`).join('')}</div></div></div>
+      <div class="acts"><button class="btn sm pri" data-e="ok" type="button">Listo</button>${E.length>1?'<button class="btn sm bad" data-e="del" type="button">Eliminar</button>':''}</div></div>`
+    :`<div class="item" data-id="${p.id}"><div><h3>${esc(p.n||'Sin nombre')}</h3><p>${!p.s||!p.s.length?'Todos los servicios':p.s.length+' servicio'+(p.s.length===1?'':'s')} · ${p.h?'Horario propio':'Horario del local'}</p></div><button class="btn sm ghost" data-e="ed" type="button">Editar</button></div>`).join('')}
+let eqT=null;const saveEqLater=()=>{clearTimeout(eqT);eqT=setTimeout(()=>guardar(Store.saveNegocio()),900)};
+$('eqList').addEventListener('input',e=>{if(e.target.dataset.k!=='n')return;const p=proOf(e.target.closest('.item').dataset.id);p.n=e.target.value.slice(0,40);saveEqLater()});
+$('eqList').addEventListener('change',e=>{const sv=e.target.dataset.sv;if(!sv)return;const it=e.target.closest('.item'),p=proOf(it.dataset.id);
+  const on=[...it.querySelectorAll('[data-sv]')].filter(x=>x.checked).map(x=>x.dataset.sv);
+  if(!on.length){e.target.checked=true;emsg('bad','Cada profesional debe realizar al menos un servicio.');return}emsg('','');
+  p.s=on.length===D.servicios.length?null:on;saveEqLater()});
+$('eqList').addEventListener('click',e=>{const a=e.target.dataset.e;if(!a)return;const id=e.target.closest('.item').dataset.id;emsg('','');
+  if(a==='ed')eqEd=id;
+  if(a==='ok'){const p=proOf(id);if(!String(p.n||'').trim())p.n='Profesional';eqEd=null}
+  if(a==='del'){if(D.citas.some(c=>proIdC(c)===id&&c.fecha>=ymd(new Date())&&c.estado!=='Cancelada')){emsg('bad','Esa persona tiene citas futuras. Muévelas a otro profesional o cancélalas antes de eliminarla.');return}
+    D.negocio.equipo=EQ().filter(p=>p.id!==id);D.negocio.bloqueos=(D.negocio.bloqueos||[]).filter(b=>b.pro!==id);if(proF===id)proF='';if(horSel===id)horSel='';eqEd=null}
+  clearTimeout(eqT);guardar(Store.saveNegocio());paintEquipo();paintHorSel();paintHor();paintBloq()});
+$('eqAdd').onclick=()=>{const E=EQ();if(E.length>=maxPro())return;const p={id:'p'+uid().slice(1),n:'Profesional '+(E.length+1),h:null,s:null};E.push(p);eqEd=p.id;guardar(Store.saveNegocio());paintEquipo();paintHorSel();paintBloq()};
 // servicios
 let svcEd=null;
 function paintSvcs(){const cats=[...new Set(D.servicios.map(s=>s.cat||'General'))];
@@ -548,18 +611,25 @@ $('svcList').addEventListener('click',e=>{const a=e.target.dataset.s;if(!a)retur
   guardar(Store.saveNegocio());paintSvcs()});
 $('sAdd').onclick=()=>{const s={id:uid(),cat:D.servicios.at(-1)?.cat||'General',n:'Nuevo servicio',d:30,p:10000};D.servicios.push(s);svcEd=s.id;guardar(Store.saveNegocio());paintSvcs()};
 // horario
-function paintHor(){const H=D.negocio.horario;$('horList').innerHTML=[1,2,3,4,5,6,0].map(i=>{const h=H[i];return `<div class="hor" data-d="${i}"><label class="chk"><input type="checkbox" data-k="on"${h?' checked':''}>${DIAS[i].slice(0,3)}</label>
-  ${[0,1,2,3].map(j=>`<input type="time" data-j="${j}" value="${h?h[j]||'':''}"${h?'':' disabled'} aria-label="${DIAS[i]}">`).join('')}</div>`}).join('')}
+let horSel='';
+function paintHorSel(){const m=multi();$('horProF').hidden=!m;$('bPro').hidden=!m;if(horSel&&!EQ().some(p=>p.id===horSel))horSel='';
+  $('horPro').innerHTML='<option value="">Local (horario general)</option>'+EQ().map(p=>`<option value="${p.id}">${esc(p.n||'Sin nombre')}</option>`).join('');$('horPro').value=horSel;
+  $('bPro').innerHTML='<option value="">Todo el local</option>'+EQ().map(p=>`<option value="${p.id}">${esc(p.n||'Sin nombre')}</option>`).join('')}
+function paintHor(){const p=horSel?proOf(horSel):null;$('horPropioL').hidden=!p;if(p)$('horPropio').checked=!!p.h;const ro=!!p&&!p.h;$('hGuardar').hidden=ro;
+  const H=p&&p.h?p.h:D.negocio.horario;$('horList').innerHTML=[1,2,3,4,5,6,0].map(i=>{const h=H[i];return `<div class="hor" data-d="${i}"><label class="chk"><input type="checkbox" data-k="on"${h?' checked':''}${ro?' disabled':''}>${DIAS[i].slice(0,3)}</label>
+  ${[0,1,2,3].map(j=>`<input type="time" data-j="${j}" value="${h?h[j]||'':''}"${h&&!ro?'':' disabled'} aria-label="${DIAS[i]}">`).join('')}</div>`}).join('')}
+$('horPro').addEventListener('change',()=>{horSel=$('horPro').value;nmsg('hMsg','','');paintHor()});
+$('horPropio').addEventListener('change',()=>{const p=proOf(horSel);p.h=$('horPropio').checked?D.negocio.horario.map(x=>x?x.slice():null):null;guardar(Store.saveNegocio());paintHor();paintEquipo()});
 $('horList').addEventListener('change',e=>{if(e.target.dataset.k==='on'){const r=e.target.closest('.hor');r.querySelectorAll('input[type=time]').forEach((x,j)=>{x.disabled=!e.target.checked;if(e.target.checked&&!x.value&&j<2)x.value=j?'19:00':'10:00'})}});
 $('hGuardar').onclick=()=>{const H=[null,null,null,null,null,null,null];let bad='';
   $('horList').querySelectorAll('.hor').forEach(r=>{const d=+r.dataset.d;if(!r.querySelector('[data-k=on]').checked)return;const v=[...r.querySelectorAll('input[type=time]')].map(x=>x.value);
     if(!v[0]||!v[1]||toMin(v[0])>=toMin(v[1]))bad=DIAS[d];H[d]=v});
   if(bad){nmsg('hMsg','bad','Revisa el horario del '+bad+': la hora de cierre debe ser después de la apertura.');return}
-  D.negocio.horario=H;guardar(Store.saveNegocio()).then(()=>nmsg('hMsg','ok','Horario guardado.'));paintAgenda()};
+  if(horSel&&proOf(horSel).h)proOf(horSel).h=H;else D.negocio.horario=H;guardar(Store.saveNegocio()).then(()=>nmsg('hMsg','ok','Horario guardado.'));paintAgenda()};
 function paintBloq(){const B=(D.negocio.bloqueos||[]).filter(b=>b.fecha>=ymd(new Date())).sort((a,b)=>a.fecha.localeCompare(b.fecha));
-  $('bList').innerHTML=B.map(b=>`<div class="item"><div><h3>${esc(fechaLarga(b.fecha))}</h3><p>${esc(b.motivo||'Sin atención')}</p></div><button class="btn sm ghost" data-del="${b.fecha}" type="button">Quitar</button></div>`).join('')}
-$('bAdd').onclick=()=>{const f=$('bFecha').value;if(!f)return;D.negocio.bloqueos=(D.negocio.bloqueos||[]).filter(b=>b.fecha!==f).concat({fecha:f,motivo:$('bMotivo').value.trim()});$('bFecha').value='';$('bMotivo').value='';guardar(Store.saveNegocio());paintBloq()};
-$('bList').addEventListener('click',e=>{const f=e.target.dataset.del;if(!f)return;D.negocio.bloqueos=D.negocio.bloqueos.filter(b=>b.fecha!==f);guardar(Store.saveNegocio());paintBloq()});
+  $('bList').innerHTML=B.map(b=>`<div class="item"><div><h3>${esc(fechaLarga(b.fecha))}</h3><p>${multi()?esc(b.pro?proOf(b.pro).n:'Todo el local')+' · ':''}${esc(b.motivo||'Sin atención')}</p></div><button class="btn sm ghost" data-del="${b.fecha}" data-pro="${esc(b.pro||'')}" type="button">Quitar</button></div>`).join('')}
+$('bAdd').onclick=()=>{const f=$('bFecha').value;if(!f)return;const pr=multi()?$('bPro').value:'';D.negocio.bloqueos=(D.negocio.bloqueos||[]).filter(b=>!(b.fecha===f&&(b.pro||'')===pr)).concat(pr?{fecha:f,motivo:$('bMotivo').value.trim(),pro:pr}:{fecha:f,motivo:$('bMotivo').value.trim()});$('bFecha').value='';$('bMotivo').value='';guardar(Store.saveNegocio());paintBloq()};
+$('bList').addEventListener('click',e=>{const f=e.target.dataset.del;if(!f)return;const pr=e.target.dataset.pro||'';D.negocio.bloqueos=D.negocio.bloqueos.filter(b=>!(b.fecha===f&&(b.pro||'')===pr));guardar(Store.saveNegocio());paintBloq()});
 
 // ================= NAVEGACIÓN =================
 function show(v){['agenda','cita','clientes','ajustes','admin'].forEach(x=>$('v-'+x).hidden=x!==v);if(v==='admin')paintAdmin();
@@ -571,16 +641,20 @@ function modo(m){$('mPro').setAttribute('aria-pressed',m==='pro');$('mCli').setA
 $('mPro').onclick=()=>modo('pro');$('mCli').onclick=()=>modo('cli');
 
 // ================= RESERVA DEL CLIENTE =================
-let R={svc:null,fecha:null,hora:null};
-function paso(n){[1,2,3,4].forEach(i=>$('r'+i).hidden=i!==n);[1,2,3].forEach(i=>$('st'+i).classList.toggle('on',i<=Math.min(n,3)));window.scrollTo(0,0)}
-function resetReserva(){R={svc:null,fecha:null,hora:null};const n=D.negocio;$('rNom').textContent=n.nom;$('rInfo').textContent=[n.rubro,n.dir].filter(Boolean).join(' · ');paintTop();
-  if(!linkActivo()){[1,2,3,4].forEach(i=>$('r'+i).hidden=true);$('r0').hidden=false;$('r0t').innerHTML='Este negocio no tiene reservas en línea activas por ahora.'+(n.wa?`<br><br><a class="btn wa" href="https://wa.me/${telWa(n.wa)}" target="_blank" rel="noopener">Escribir por WhatsApp</a>`:'');return}
+let R={svc:null,pro:null,fecha:null,hora:null};
+function paso(n){$('rP').hidden=n!=='P';[1,2,3,4].forEach(i=>$('r'+i).hidden=i!==n);const k=n==='P'?2:Math.min(n,3);[1,2,3].forEach(i=>$('st'+i).classList.toggle('on',i<=k));window.scrollTo(0,0)}
+function resetReserva(){R={svc:null,pro:null,fecha:null,hora:null};$('rP').hidden=true;const n=D.negocio;$('rNom').textContent=n.nom;$('rInfo').textContent=[n.rubro,n.dir].filter(Boolean).join(' · ');paintTop();
+  if(!linkActivo()){[1,2,3,4].forEach(i=>$('r'+i).hidden=true);$('rP').hidden=true;$('r0').hidden=false;$('r0t').innerHTML='Este negocio no tiene reservas en línea activas por ahora.'+(n.wa?`<br><br><a class="btn wa" href="https://wa.me/${telWa(n.wa)}" target="_blank" rel="noopener">Escribir por WhatsApp</a>`:'');return}
   const cats=[...new Set(D.servicios.map(s=>s.cat||'General'))];
   $('rSvcs').innerHTML=cats.map(c=>`<div class="cat">${esc(c)}</div>`+D.servicios.filter(s=>(s.cat||'General')===c).map(s=>`<button type="button" class="svc" data-id="${s.id}" aria-pressed="false"><b>${esc(s.n)}</b><small>${s.d} min</small><span class="amt">${clp(s.p)}</span></button>`).join('')).join('');
   paso(1)}
-$('rSvcs').addEventListener('click',e=>{const b=e.target.closest('.svc');if(!b)return;R.svc=b.dataset.id;paintDiasCli();paso(2)});
+$('rSvcs').addEventListener('click',e=>{const b=e.target.closest('.svc');if(!b)return;R.svc=b.dataset.id;R.fecha=null;const P=prosPara(R.svc);
+  if(P.length>1){$('rPros').innerHTML=`<button type="button" class="svc" data-p="*" style="grid-template-columns:1fr"><b>Cualquiera disponible</b><small>Te damos la primera hora libre</small></button>`+P.map(p=>`<button type="button" class="svc" data-p="${p.id}" style="grid-template-columns:1fr"><b>${esc(p.n||'Profesional')}</b><small>Ver sus horas</small></button>`).join('');paso('P')}
+  else{R.pro=(P[0]||EQ()[0]).id;paintDiasCli();paso(2)}});
+$('rPros').addEventListener('click',e=>{const b=e.target.closest('.svc');if(!b)return;R.pro=b.dataset.p;R.fecha=null;paintDiasCli();paso(2)});
+$('rPVolver').onclick=()=>paso(1);
 function diasCli(){const n=D.negocio,out=[],s=svcOf(R.svc);const lim=new Date(Date.now()+(n.ant||0)*36e5);
-  for(let i=0;i<(n.dias||14);i++){const d=new Date();d.setDate(d.getDate()+i);const f=ymd(d);const L=libres(f,s.d).filter(t=>new Date(f+'T'+toHM(t))>=lim);if(L.length)out.push({f,d,L})}return out}
+  for(let i=0;i<(n.dias||14);i++){const d=new Date();d.setDate(d.getDate()+i);const f=ymd(d);const L=(R.pro==='*'?libresAny(f,s.d,R.svc):libres(f,s.d,null,R.pro)).filter(t=>new Date(f+'T'+toHM(t))>=lim);if(L.length)out.push({f,d,L})}return out}
 function paintDiasCli(){const D2=diasCli();if(!R.fecha||!D2.some(x=>x.f===R.fecha))R.fecha=D2[0]?.f||null;
   $('rStrip').innerHTML=D2.map(x=>`<button type="button" class="day" data-f="${x.f}" aria-pressed="${x.f===R.fecha}"><small>${DC[x.d.getDay()]}</small><b>${x.d.getDate()}</b></button>`).join('');
   const cur=D2.find(x=>x.f===R.fecha);
@@ -588,20 +662,21 @@ function paintDiasCli(){const D2=diasCli();if(!R.fecha||!D2.some(x=>x.f===R.fech
   $('rSlotsHint').textContent=cur?fechaLarga(cur.f)+' · '+cur.L.length+' horas disponibles':'No hay horas disponibles en los próximos días. Escríbenos por WhatsApp.'}
 $('rStrip').addEventListener('click',e=>{const b=e.target.closest('.day');if(!b)return;R.fecha=b.dataset.f;paintDiasCli()});
 $('rSlots').addEventListener('click',e=>{const b=e.target.closest('.slot');if(!b)return;R.hora=b.dataset.h;const s=svcOf(R.svc);
-  $('rSum').innerHTML=`<div><span>Servicio</span><b>${esc(s.n)}</b></div><div><span>Día</span><b>${esc(fechaLarga(R.fecha))}</b></div><div><span>Hora</span><b>${R.hora} (${s.d} min)</b></div><div><span>Valor</span><b>${clp(s.p)}</b></div>`;
+  $('rSum').innerHTML=`<div><span>Servicio</span><b>${esc(s.n)}</b></div>${prosPara(R.svc).length>1?`<div><span>Profesional</span><b>${R.pro==='*'?'Cualquiera disponible':esc(proOf(R.pro).n)}</b></div>`:''}<div><span>Día</span><b>${esc(fechaLarga(R.fecha))}</b></div><div><span>Hora</span><b>${R.hora} (${s.d} min)</b></div><div><span>Valor</span><b>${clp(s.p)}</b></div>`;
   $('rMsg').hidden=true;paso(3);$('rNomC').focus()});
-$('r2Volver').onclick=()=>paso(1);$('r3Volver').onclick=()=>{paintDiasCli();paso(2)};
+$('r2Volver').onclick=()=>paso(prosPara(R.svc).length>1?'P':1);$('r3Volver').onclick=()=>{paintDiasCli();paso(2)};
 $('rReservar').onclick=async()=>{const nom=$('rNomC').value.trim(),tel=$('rTel').value.trim();const m=$('rMsg');
   if(!nom||telWa(tel).length<11){m.className='msg bad';m.textContent=!nom?'Escribe tu nombre.':'Escribe tu WhatsApp con el 9 adelante, por ejemplo +56 9 1234 5678.';m.hidden=false;return}
   const s=svcOf(R.svc);
-  if(!libres(R.fecha,s.d).map(toHM).includes(R.hora)){m.className='msg bad';m.textContent='Alguien acaba de tomar esa hora. Elige otra.';m.hidden=false;paintDiasCli();paso(2);return}
-  const c={id:uid(),fecha:R.fecha,hora:R.hora,svc:R.svc,sn:s.n,p:s.p,dur:s.d,nom:nom.slice(0,70),tel:tel.slice(0,25),estado:D.negocio.auto?'Confirmada':'Pendiente',origen:'link',nota:$('rNota').value.trim().slice(0,300),creada:new Date().toISOString()};
+  const pid=R.pro==='*'?(proLibreEn(R.fecha,toMin(R.hora),s.d,R.svc)||{}).id:R.pro;
+  if(!pid||!libres(R.fecha,s.d,null,pid).map(toHM).includes(R.hora)){m.className='msg bad';m.textContent='Alguien acaba de tomar esa hora. Elige otra.';m.hidden=false;paintDiasCli();paso(2);return}
+  const c={id:uid(),fecha:R.fecha,hora:R.hora,svc:R.svc,sn:s.n,p:s.p,dur:s.d,nom:nom.slice(0,70),tel:tel.slice(0,25),estado:D.negocio.auto?'Confirmada':'Pendiente',origen:'link',nota:$('rNota').value.trim().slice(0,300),pro:pid,creada:new Date().toISOString()};
   $('rReservar').disabled=true;
   try{await Store.reservar(c)}catch(e){$('rReservar').disabled=false;m.className='msg bad';m.textContent=e&&e.code==='tomada'?'Alguien acaba de tomar esa hora. Elige otra.':'No se pudo reservar. Revisa tu conexión e inténtalo de nuevo.';m.hidden=false;if(e&&e.code==='tomada'){await cargarOcup();paintDiasCli();paso(2)}return}
   $('rReservar').disabled=false;
   $('rOkT').textContent=c.estado==='Confirmada'?'¡Tu hora quedó reservada!':'¡Solicitud enviada!';
   $('rOkP').textContent=c.estado==='Confirmada'?'Te esperamos. Si no puedes asistir, avísanos con tiempo.':'El negocio confirmará tu hora por WhatsApp.';
-  $('rSum2').innerHTML=$('rSum').innerHTML+`<div><span>A nombre de</span><b>${esc(nom)}</b></div>`;
+  $('rSum2').innerHTML=$('rSum').innerHTML.replace('Cualquiera disponible',esc(proOf(pid).n))+`<div><span>A nombre de</span><b>${esc(nom)}</b></div>`;
   $('rWaHint').textContent=D.negocio.wa?'¿Dudas? Escribe al '+D.negocio.wa+'.':'';
   $('rNomC').value='';$('rTel').value='';$('rNota').value='';paso(4)};
 $('rOtra').onclick=()=>resetReserva();
@@ -614,7 +689,7 @@ function paintBanner(){const b=$('linkBanner');if(!ONLINE){b.hidden=true;return}
   if(dias<=0){b.className='banner bad';b.innerHTML='<span>Tu link de reservas está vencido: tus clientes no pueden reservar en línea. Tu agenda sigue funcionando.</span>'+wa;b.hidden=false}
   else if(dias<=15){b.className='banner warn';b.innerHTML=`<span>Tu link de reservas vence en ${dias} día${dias===1?'':'s'}.</span>`+wa;b.hidden=false}else b.hidden=true}
 function amsg(k,t){const m=$('aMsg');m.className='msg '+k;m.textContent=t;m.hidden=!t}
-let altaModo=false;
+let altaModo=false,creando=false;
 function modoAuth(up){altaModo=up;$('aIn').setAttribute('aria-pressed',!up);$('aUp').setAttribute('aria-pressed',up);$('aUpExtra').hidden=!up;$('aGo').textContent=up?'Crear cuenta':'Ingresar';$('aReset').hidden=up;$('aPass').autocomplete=up?'new-password':'current-password';amsg('','')}
 $('aIn').onclick=()=>modoAuth(false);$('aUp').onclick=()=>modoAuth(true);
 $('aSlug').addEventListener('input',e=>{e.target.value=e.target.value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-+/,'')});
@@ -626,7 +701,7 @@ async function crearNegocio(nom,rubro,slug){const uidN=FB.uid,email=FB.user.emai
     tx.set(r,{uid:uidN});
     tx.set(negRef(uidN),{nom,rubro,slug,wa:'',dir:'',logo:'',record:'Hola {nombre} 👋 te recordamos tu hora en {negocio}: {servicio} el {fecha} a las {hora}. Si no puedes asistir, avísanos por aquí. ¡Te esperamos!',
       ant:2,dias:21,auto:true,horario:H2M(HORARIO_BASE),bloqueos:[],servicios:(SVC_BASE[rubro]||SVC_BASE['Otro']).map(([n,d,p],i)=>({id:'s'+(i+1),cat:rubro,n,d,p})),
-      linkHasta:Date.now()+15*864e5,creado:Date.now()});
+      linkHasta:Date.now()+15*864e5,maxPro:1,equipo:[{id:'p1',n:'Profesional 1',h:null,s:null}],creado:Date.now()});
     tx.set(negRef(uidN).collection('privado').doc('info'),{email,creado:Date.now()})})}
 $('aGo').onclick=async()=>{const mail=$('aMail').value.trim(),pass=$('aPass').value;
   const setup=!!FB.user;
@@ -634,11 +709,11 @@ $('aGo').onclick=async()=>{const mail=$('aMail').value.trim(),pass=$('aPass').va
   if(altaModo){const nom=$('aNeg').value.trim(),slug=$('aSlug').value.replace(/-+$/,'');if(!nom){amsg('bad','Escribe el nombre de tu negocio.');return}if(slug.length<3){amsg('bad','El nombre del link debe tener al menos 3 letras.');return}}
   $('aGo').disabled=true;amsg('','');
   try{
-    if(altaModo){if(!FB.user){const cr=await FB.auth.createUserWithEmailAndPassword(mail,pass);FB.user=cr.user;FB.uid=cr.user.uid}
+    if(altaModo){creando=true;if(!FB.user){const cr=await FB.auth.createUserWithEmailAndPassword(mail,pass);FB.user=cr.user;FB.uid=cr.user.uid}
       await crearNegocio($('aNeg').value.trim(),$('aRubro').value,$('aSlug').value.replace(/-+$/,''));await entrar(FB.user)}
     else await FB.auth.signInWithEmailAndPassword(mail,pass);
   }catch(e){amsg('bad',e&&e.code==='slug'?'Ese nombre de link ya existe. Prueba con otro.':(ERR[e&&e.code]||'No se pudo completar. Inténtalo de nuevo.'))}
-  finally{$('aGo').disabled=false}};
+  finally{creando=false;$('aGo').disabled=false}};
 $('aReset').onclick=async()=>{const mail=$('aMail').value.trim();if(!mail){amsg('bad','Escribe tu correo arriba y vuelve a tocar "Olvidé mi contraseña".');return}
   try{await FB.auth.sendPasswordResetEmail(mail);amsg('ok','Te enviamos un correo para crear una nueva contraseña.')}catch(e){amsg('bad',ERR[e&&e.code]||'No se pudo enviar el correo.')}};
 $('salir').onclick=async()=>{FB.unsub.forEach(f=>f());await FB.auth.signOut();location.reload()};
@@ -646,10 +721,11 @@ function pantalla(p){$('auth').hidden=p!=='auth';$('pro').hidden=p!=='pro';$('cl
 let entrando=false;
 async function entrar(user){if(entrando)return;FB.user=user;FB.uid=user.uid;
   const snap=await negRef(user.uid).get();
+  if(entrando)return;
   if(!snap.exists){pantalla('auth');modoAuth(true);$('aMail').value=user.email;$('aMail').disabled=true;$('aPass').closest('.f').hidden=true;$('aIn').hidden=true;amsg('ok','Completa los datos de tu negocio para terminar.');return}
   entrando=true;
   $('tabAdmin').hidden=!(ADMIN&&String(user.email||'').toLowerCase()===ADMIN);
-  const apply=x=>{const id=D.negocio&&D.negocio._uid;D.negocio=fromDoc(x);D.servicios=(x.servicios||[]).map(s=>({...s}));paintTop();if(vista==='agenda'){paintAgenda();paintBanner()}};
+  const apply=x=>{const id=D.negocio&&D.negocio._uid;D.negocio=fromDoc(x);D.servicios=(x.servicios||[]).map(s=>({...s}));paintTop();if(vista==='agenda'){paintAgenda();paintBanner()}if(vista==='ajustes'&&!eqEd&&!svcEd)paintEquipo()};
   apply(snap.data());D.citas=[];pantalla('pro');show('agenda');
   FB.unsub.push(negRef(user.uid).onSnapshot(s=>{if(s.exists&&!s.metadata.hasPendingWrites)apply(s.data())}));
   FB.unsub.push(negRef(user.uid).collection('citas').onSnapshot(s=>{D.citas=s.docs.map(d=>({id:d.id,...d.data()}));
@@ -665,17 +741,20 @@ async function paintAdmin(force){if(!ONLINE)return;const m=$('admMsg');
   $('admN').textContent=ADM.length;$('admA').textContent=ADM.filter(x=>(x.linkHasta||0)>now).length;$('admV').textContent=ADM.filter(x=>(x.linkHasta||0)>now&&x.linkHasta-now<30*864e5).length;
   const L=ADM.filter(x=>!q||[x.nom,x.slug,x.email].some(v=>String(v||'').toLowerCase().includes(q))).sort((a,b)=>(a.linkHasta||0)-(b.linkHasta||0));
   $('admList').innerHTML=L.map(x=>{const act=(x.linkHasta||0)>now,dias=Math.ceil(((x.linkHasta||0)-now)/864e5);
-    return `<div class="item" data-id="${esc(x.id)}"><div><h3>${esc(x.nom||'(sin nombre)')}</h3><p>${esc(x.rubro||'')} · ${esc(x.slug||'')} · ${esc(x.email||'')}<br>Registrado ${x.creado?new Date(x.creado).toLocaleDateString('es-CL'):'—'}</p></div>
+    return `<div class="item" data-id="${esc(x.id)}"><div><h3>${esc(x.nom||'(sin nombre)')}</h3><p>${esc(x.rubro||'')} · ${esc(x.slug||'')} · ${esc(x.email||'')}<br>Plan: <b>${x.maxPro||1} profesional${(x.maxPro||1)===1?'':'es'}</b> (tiene ${(x.equipo||[]).length||1}) · Registrado ${x.creado?new Date(x.creado).toLocaleDateString('es-CL'):'—'}</p></div>
     <span class="pill ${act?(dias<=30?'Pendiente':'Confirmada'):'Cancelada'}">${act?'Activo · '+dias+' días':'Vencido'}</span>
-    <div class="acts"><button class="btn sm pri" data-ad="365" type="button">+1 año</button><button class="btn sm ghost" data-ad="30" type="button">+1 mes</button><button class="btn sm ghost" data-ad="15" type="button">+15 días</button><button class="btn sm bad" data-ad="0" type="button">Desactivar</button>
+    <div class="acts"><button class="btn sm pri" data-ad="365" type="button">+1 año</button><button class="btn sm ghost" data-ad="30" type="button">+1 mes</button><button class="btn sm ghost" data-ad="15" type="button">+15 días</button><button class="btn sm bad" data-ad="0" type="button">Desactivar</button><button class="btn sm ghost" data-mp="-1" type="button">− Prof.</button><button class="btn sm ghost" data-mp="1" type="button">+ Prof.</button>
     ${act?`<span class="hint">Hasta ${new Date(x.linkHasta).toLocaleDateString('es-CL')}</span>`:''}</div></div>`}).join('')||'<div class="empty">No hay negocios que coincidan.</div>'}
 $('admBus').addEventListener('input',()=>paintAdmin());$('admRef').onclick=()=>paintAdmin(true);
-$('admList').addEventListener('click',async e=>{const b=e.target.closest('[data-ad]');if(!b)return;const id=b.closest('.item').dataset.id,x=ADM.find(y=>y.id===id);const d=+b.dataset.ad;
+$('admList').addEventListener('click',async e=>{const mb=e.target.closest('[data-mp]');if(mb){const id=mb.closest('.item').dataset.id,x=ADM.find(y=>y.id===id);const nv=Math.min(50,Math.max(1,(x.maxPro||1)+(+mb.dataset.mp)));if(nv===(x.maxPro||1))return;mb.disabled=true;
+    try{await negRef(id).update({maxPro:nv});x.maxPro=nv;paintAdmin();const m=$('admMsg');m.className='msg ok';m.textContent=(x.nom||'Negocio')+': plan de '+nv+' profesional'+(nv===1?'':'es')+'.';m.hidden=false}
+    catch(err){const m=$('admMsg');m.className='msg bad';m.textContent='No se pudo actualizar. Revisa las reglas de administrador.';m.hidden=false;mb.disabled=false}return}
+  const b=e.target.closest('[data-ad]');if(!b)return;const id=b.closest('.item').dataset.id,x=ADM.find(y=>y.id===id);const d=+b.dataset.ad;
   const nuevo=d===0?Date.now()-1000:Math.max(Date.now(),x.linkHasta||0)+d*864e5;b.disabled=true;
   try{await negRef(id).update({linkHasta:nuevo});x.linkHasta=nuevo;paintAdmin();const m=$('admMsg');m.className='msg ok';m.textContent=(x.nom||'Negocio')+': '+(d?'link activo hasta el '+new Date(nuevo).toLocaleDateString('es-CL'):'link desactivado')+'.';m.hidden=false}
   catch(err){const m=$('admMsg');m.className='msg bad';m.textContent='No se pudo actualizar. Revisa las reglas de administrador.';m.hidden=false;b.disabled=false}});
 // ---- cliente en línea ----
-async function cargarOcup(){const hoy=ymd(new Date());const q=await negRef(D.negocio._uid).collection('ocupado').where('f','>=',hoy).get();OCUP={};q.docs.forEach(d=>{OCUP[d.id]=(d.data().b||[]).map(x=>[x.i,x.f])})}
+async function cargarOcup(){const hoy=ymd(new Date());const q=await negRef(D.negocio._uid).collection('ocupado').where('f','>=',hoy).get();OCUP={};q.docs.forEach(d=>{OCUP[d.id]=(d.data().b||[]).map(x=>[x.i,x.f,x.p])})}
 async function iniciarCliente(){pantalla('load');
   try{const s=await FB.db.doc('slugs/'+PARAM_N).get();if(!s.exists)throw{code:'nf'};const id=s.data().uid;const n=await negRef(id).get();if(!n.exists)throw{code:'nf'};
     const x=n.data();D.negocio=fromDoc(x);D.negocio._uid=id;D.servicios=x.servicios||[];D.citas=[];await cargarOcup();
@@ -687,7 +766,7 @@ else{
   $('demoBar').hidden=true;document.querySelector('.modo').hidden=true;pantalla('load');
   initFirebase().then(()=>{
     if(CLIENTE_ONLINE){iniciarCliente();return}
-    FB.auth.onAuthStateChanged(u=>{if(u)entrar(u).catch(()=>{pantalla('auth');amsg('bad','No se pudo cargar tu agenda. Revisa tu conexión.')});else{pantalla('auth');modoAuth(false)}});
+    FB.auth.onAuthStateChanged(u=>{if(u){if(creando)return;entrar(u).catch(()=>{pantalla('auth');amsg('bad','No se pudo cargar tu agenda. Revisa tu conexión.')})}else{pantalla('auth');modoAuth(false)}});
   }).catch(()=>{pantalla('auth');amsg('bad','Sin conexión a internet. Conéctate y vuelve a abrir la app.')});
 }
 })();
